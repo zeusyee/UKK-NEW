@@ -93,4 +93,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(TimeLog::class, 'user_id', 'user_id');
     }
+
+    /**
+     * Get the project memberships where the user is a member
+     */
+    public function projects()
+    {
+        return $this->hasMany(ProjectMember::class, 'user_id', 'user_id');
+    }
 }

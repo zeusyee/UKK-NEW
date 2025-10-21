@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProjectMonitoringController;
+use App\Http\Controllers\MemberController;
 
 // Authentication Routes
 Route::middleware('guest')->group(function () {
@@ -61,10 +62,9 @@ Route::middleware('auth')->group(function () {
             ->name('admin.monitoring.project-details');
     });
 
-    // User routes
+    // Member routes
     Route::middleware(['auth', \App\Http\Middleware\MemberMiddleware::class])->group(function () {
-        Route::get('/dashboard', function () {
-            return view('user.dashboard');
-        })->name('user.dashboard');
+        Route::get('/dashboard', [MemberController::class, 'dashboard'])->name('member.dashboard');
+        Route::get('/projects/{project}', [MemberController::class, 'projectDetails'])->name('member.project.details');
     });
 });
