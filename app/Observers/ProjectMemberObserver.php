@@ -27,11 +27,11 @@ class ProjectMemberObserver
     /**
      * Handle the ProjectMember "deleted" event.
      */
-    public function deleted(ProjectMember $projectMember): void
+public function deleted(ProjectMember $projectMember): void
     {
         // Check if user has any other project memberships
         $otherMemberships = ProjectMember::where('user_id', $projectMember->user_id)
-            ->where('project_member_id', '!=', $projectMember->project_member_id)
+            ->where('member_id', '!=', $projectMember->member_id)
             ->exists();
 
         // If no other memberships exist, set status to idle

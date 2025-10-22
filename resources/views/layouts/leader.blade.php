@@ -3,25 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Member Dashboard - @yield('title')</title>
+    <title>Leader Dashboard - @yield('title')</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-100">
     <div class="min-h-screen flex">
         <!-- Sidebar -->
-        <div class="bg-blue-800 text-white w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-200 ease-in-out">
+        <div class="bg-green-800 text-white w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition duration-200 ease-in-out">
             <div class="flex items-center space-x-2 px-4">
-                <span class="text-2xl font-extrabold">Member Panel</span>
+                <span class="text-2xl font-extrabold">Leader Panel</span>
             </div>
 
             <nav class="mt-10">
-                <a href="{{ route('member.dashboard') }}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700 hover:text-white">
+                <a href="{{ route('leader.dashboard') }}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-green-700 hover:text-white">
                     <i class="fas fa-home mr-2"></i>Dashboard
                 </a>
                 <form method="POST" action="{{ route('logout') }}" class="block">
                     @csrf
-                    <button type="submit" class="w-full text-left py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700 hover:text-white">
+                    <button type="submit" class="w-full text-left py-2.5 px-4 rounded transition duration-200 hover:bg-green-700 hover:text-white">
                         <i class="fas fa-sign-out-alt mr-2"></i>Logout
                     </button>
                 </form>
@@ -34,11 +34,12 @@
             <div class="bg-white shadow-md">
                 <div class="container mx-auto px-6 py-4">
                     <div class="flex items-center justify-between">
-                        <button class="md:hidden text-gray-500 hover:text-gray-600">
+                        <button id="mobile-menu-toggle" class="md:hidden text-gray-500 hover:text-gray-600">
                             <i class="fas fa-bars text-2xl"></i>
                         </button>
                         <div class="text-right">
                             <span class="text-gray-800">{{ Auth::user()->full_name }}</span>
+                            <span class="ml-2 px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Leader</span>
                         </div>
                     </div>
                 </div>
@@ -65,10 +66,13 @@
 
     <script>
         // Mobile menu toggle
-        document.querySelector('button').addEventListener('click', () => {
-            const sidebar = document.querySelector('.bg-blue-800');
-            sidebar.classList.toggle('-translate-x-full');
-        });
+        const menuToggle = document.getElementById('mobile-menu-toggle');
+        if (menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                const sidebar = document.querySelector('.bg-green-800');
+                sidebar.classList.toggle('-translate-x-full');
+            });
+        }
     </script>
 </body>
 </html>

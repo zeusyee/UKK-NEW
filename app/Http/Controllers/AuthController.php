@@ -75,6 +75,16 @@ class AuthController extends Controller
         if ($user->role === 'admin') {
             return redirect()->route('admin.dashboard');
         }
-        return redirect()->route('user.dashboard');
+        
+        // Check if user is a leader in any project
+        $isLeader = \App\Models\ProjectMember::where('user_id', $user->user_id)
+            ->whereIn('role', ['admin', 'leader'])
+            ->exists();
+        
+        if ($isLeader) {
+            return redirect()->route('leader.dashboard');
+        }
+        
+        return redirect()->route('member.dashboard');
     }
 }

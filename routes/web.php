@@ -6,6 +6,10 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProjectMonitoringController;
 use App\Http\Controllers\MemberController;
+use App\Http\Controllers\LeaderController;
+use App\Http\Controllers\BoardController;
+use App\Http\Controllers\CardController;
+use App\Http\Controllers\SubtaskController;
 
 // Authentication Routes
 Route::middleware('guest')->group(function () {
@@ -62,7 +66,33 @@ Route::middleware('auth')->group(function () {
             ->name('admin.monitoring.project-details');
     });
 
-    // Member routes
+    // Leader routes (for users with 'leader' or 'admin' role in a project)
+    Route::prefix('leader')->name('leader.')->group(function () {
+        Route::get('/dashboard', [LeaderController::class, 'dashboard'])->name('dashboard');
+        Route::get('/projects/{project}', [LeaderController::class, 'projectDetails'])->name('project.details');
+        
+        // Board management
+        Route::get('/projects/{project}/boards/create', [BoardController::class, 'create'])->name('board.create');
+        Route::post('/projects/{project}/boards', [BoardController::class, 'store'])->name('board.store');
+        Route::get('/projects/{project}/boards/{board}/edit', [BoardController::class, 'edit'])->name('board.edit');
+        Route::put('/projects/{project}/boards/{board}', [BoardController::class, 'update'])->name('board.update');
+        Route::delete('/projects/{project}/boards/{board}', [BoardController::class, 'destroy'])->name('board.destroy');
+        
+        // Card management
+        Route::get('/projects/{project}/boards/{board}/cards/create', [CardController::class, 'create'])->name('card.create');
+        Route::post('/projects/{project}/boards/{board}/cards', [CardController::class, 'store'])->name('card.store');
+        Route::get('/projects/{project}/boards/{board}/cards/{card}', [CardController::class, 'show'])->name('card.show');
+        Route::get('/projects/{project}/boards/{board}/cards/{card}/edit', [CardController::class, 'edit'])->name('card.edit');
+        Route::put('/projects/{project}/boards/{board}/cards/{card}', [CardController::class, 'update'])->name('card.update');
+        Route::delete('/projects/{project}/boards/{board}/cards/{card}', [CardController::class, 'destroy'])->name('card.destroy');
+        
+        // Subtask management
+        Route::post('/projects/{project}/boards/{board}/cards/{card}/subtasks', [SubtaskController::class, 'store'])->name('subtask.store');
+        Route::put('/projects/{project}/boards/{board}/cards/{card}/subtasks/{subtask}', [SubtaskController::class, 'update'])->name('subtask.update');
+        Route::delete('/projects/{project}/boards/{board}/cards/{card}/subtasks/{subtask}', [SubtaskController::class, 'destroy'])->name('subtask.destroy');
+    });
+
+    // Member routes (regular members, not leaders)
     Route::middleware(['auth', \App\Http\Middleware\MemberMiddleware::class])->group(function () {
         Route::get('/dashboard', [MemberController::class, 'dashboard'])->name('member.dashboard');
         Route::get('/projects/{project}', [MemberController::class, 'projectDetails'])->name('member.project.details');

@@ -32,12 +32,25 @@ class MemberController extends Controller
                 ->with('error', 'You do not have access to this project.');
         }
 
-        $project->load(['creator', 'members.user', 'boards']);
+        $project->load(['creator', 'members.user', 'boards.cards']);
+        
+        // Calculate total tasks (cards) and completed tasks
+        $totalCards = 0;
+        $completedCards = 0;
+        
+        foreach ($project->boards as $board) {
+            $totalCards += $board->cards->count();
+            $completedCards += $board->cards->where('status', 'done')->count();
+        }
         
         $projectStats = [
             'total_boards' => $project->boards->count(),
+            'total_tasks' => $totalCards,
+            'completed_tasks' => $completedCards,
             'active_members' => $project->members->count(),
-            'progress_percentage' => 0 // You'll need to calculate this based on your board/card structure
+            'progress_percentage' => $totalCards > 0 
+                ? round(($completedCards / $totalCards) * 100) 
+                : 0
         ];
 
         return view('member.project-details', compact('project', 'projectStats'));
