@@ -128,6 +128,7 @@
                                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Priority</th>
                                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Due Date</th>
+                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-gray-200">
@@ -160,6 +161,12 @@
                                                         @else
                                                             <span class="text-gray-400">No due date</span>
                                                         @endif
+                                                    </td>
+                                                    <td class="px-4 py-3 text-sm text-gray-500">
+                                                        <a href="{{ route('member.task.show', ['project' => $project->project_id, 'board' => $board->board_id, 'card' => $card->card_id]) }}" 
+                                                           class="text-blue-600 hover:text-blue-900">
+                                                            <i class="fas fa-eye mr-1"></i>View
+                                                        </a>
                                                     </td>
                                                 </tr>
                                             @endforeach

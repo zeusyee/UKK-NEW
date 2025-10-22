@@ -60,25 +60,6 @@
                     @enderror
                 </div>
 
-                <!-- Status -->
-                <div>
-                    <label for="status" class="block text-sm font-medium text-gray-700 mb-2">
-                        Status <span class="text-red-500">*</span>
-                    </label>
-                    <select id="status" 
-                            name="status" 
-                            required
-                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
-                        <option value="todo" {{ old('status', 'todo') === 'todo' ? 'selected' : '' }}>To Do</option>
-                        <option value="in_progress" {{ old('status') === 'in_progress' ? 'selected' : '' }}>In Progress</option>
-                        <option value="review" {{ old('status') === 'review' ? 'selected' : '' }}>Review</option>
-                        <option value="done" {{ old('status') === 'done' ? 'selected' : '' }}>Done</option>
-                    </select>
-                    @error('status')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
                 <!-- Priority -->
                 <div>
                     <label for="priority" class="block text-sm font-medium text-gray-700 mb-2">
