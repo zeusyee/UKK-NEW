@@ -10,6 +10,8 @@ use App\Http\Controllers\LeaderController;
 use App\Http\Controllers\BoardController;
 use App\Http\Controllers\CardController;
 use App\Http\Controllers\SubtaskController;
+use App\Http\Controllers\MemberCardController;
+use App\Http\Controllers\Admin\AdminReviewController;
 
 // Authentication Routes
 Route::middleware('guest')->group(function () {
@@ -64,6 +66,16 @@ Route::middleware('auth')->group(function () {
             ->name('admin.monitoring.index');
         Route::get('admin/monitoring/projects/{project}', [ProjectMonitoringController::class, 'projectDetails'])
             ->name('admin.monitoring.project-details');
+
+        // Review routes
+        Route::get('admin/review', [AdminReviewController::class, 'index'])
+            ->name('admin.review.index');
+        Route::get('admin/review/{card}', [AdminReviewController::class, 'show'])
+            ->name('admin.review.show');
+        Route::post('admin/review/{card}/approve', [AdminReviewController::class, 'approve'])
+            ->name('admin.review.approve');
+        Route::post('admin/review/{card}/reject', [AdminReviewController::class, 'reject'])
+            ->name('admin.review.reject');
     });
 
     // Leader routes (for users with 'leader' or 'admin' role in a project)
@@ -96,5 +108,11 @@ Route::middleware('auth')->group(function () {
     Route::middleware(['auth', \App\Http\Middleware\MemberMiddleware::class])->group(function () {
         Route::get('/dashboard', [MemberController::class, 'dashboard'])->name('member.dashboard');
         Route::get('/projects/{project}', [MemberController::class, 'projectDetails'])->name('member.project.details');
+        
+        // Member task routes
+        Route::get('/my-tasks', [MemberCardController::class, 'myTasks'])->name('member.my-tasks');
+        Route::get('/projects/{project}/boards/{board}/cards/{card}/task', [MemberCardController::class, 'showTask'])->name('member.task.show');
+        Route::post('/projects/{project}/boards/{board}/cards/{card}/start', [MemberCardController::class, 'startTask'])->name('member.task.start');
+        Route::post('/projects/{project}/boards/{board}/cards/{card}/submit', [MemberCardController::class, 'submitTask'])->name('member.task.submit');
     });
 });

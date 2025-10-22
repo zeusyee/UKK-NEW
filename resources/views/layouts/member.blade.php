@@ -19,6 +19,9 @@
                 <a href="{{ route('member.dashboard') }}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700 hover:text-white">
                     <i class="fas fa-home mr-2"></i>Dashboard
                 </a>
+                <a href="{{ route('member.my-tasks') }}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700 hover:text-white">
+                    <i class="fas fa-tasks mr-2"></i>My Tasks
+                </a>
                 <form method="POST" action="{{ route('logout') }}" class="block">
                     @csrf
                     <button type="submit" class="w-full text-left py-2.5 px-4 rounded transition duration-200 hover:bg-blue-700 hover:text-white">
@@ -34,11 +37,12 @@
             <div class="bg-white shadow-md">
                 <div class="container mx-auto px-6 py-4">
                     <div class="flex items-center justify-between">
-                        <button class="md:hidden text-gray-500 hover:text-gray-600">
+                        <button id="mobile-menu-toggle" class="md:hidden text-gray-500 hover:text-gray-600">
                             <i class="fas fa-bars text-2xl"></i>
                         </button>
                         <div class="text-right">
                             <span class="text-gray-800">{{ Auth::user()->full_name }}</span>
+                            <span class="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">Member</span>
                         </div>
                     </div>
                 </div>
@@ -65,10 +69,13 @@
 
     <script>
         // Mobile menu toggle
-        document.querySelector('button').addEventListener('click', () => {
-            const sidebar = document.querySelector('.bg-blue-800');
-            sidebar.classList.toggle('-translate-x-full');
-        });
+        const menuToggle = document.getElementById('mobile-menu-toggle');
+        if (menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                const sidebar = document.querySelector('.bg-blue-800');
+                sidebar.classList.toggle('-translate-x-full');
+            });
+        }
     </script>
 </body>
 </html>
