@@ -37,18 +37,29 @@ class MemberSubtaskController extends Controller
             'position' => 'nullable|integer|min:0'
         ]);
 
-        Subtask::create([
-            'card_id' => $card->card_id,
-            'subtask_title' => $request->subtask_title,
-            'description' => $request->description,
-            'status' => 'todo',
-            'estimated_hours' => $request->estimated_hours,
-            'position' => $request->position ?? 0,
-            'created_by' => Auth::id()
-        ]);
+        DB::beginTransaction();
+        try {
+            Subtask::create([
+                'card_id' => $card->card_id,
+                'subtask_title' => $request->subtask_title,
+                'description' => $request->description,
+                'status' => 'todo',
+                'estimated_hours' => $request->estimated_hours,
+                'position' => $request->position ?? 0,
+                'created_by' => Auth::id()
+            ]);
 
-        return redirect()->route('member.task.show', ['project' => $project, 'board' => $board, 'card' => $card])
-            ->with('success', 'Subtask created successfully.');
+            // Update card status after subtask creation
+            $card->updateStatusBasedOnSubtasks();
+
+            DB::commit();
+            
+            return redirect()->route('member.task.show', ['project' => $project, 'board' => $board, 'card' => $card])
+                ->with('success', 'Subtask created successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Failed to create subtask: ' . $e->getMessage());
+        }
     }
 
     public function startSubtask(Request $request, Project $project, Board $board, Card $card, Subtask $subtask)
@@ -63,9 +74,25 @@ class MemberSubtaskController extends Controller
             return back()->with('error', 'Subtask must be in "To Do" status to start.');
         }
 
-        $subtask->update(['status' => 'in_progress']);
+        // Check if any other subtask is already in progress
+        if (!$card->canStartSubtask()) {
+            return back()->with('error', 'Cannot start subtask. Another subtask is already in progress.');
+        }
 
-        return back()->with('success', 'Subtask started successfully!');
+        DB::beginTransaction();
+        try {
+            $subtask->update(['status' => 'in_progress']);
+            
+            // Update card status based on subtask status
+            $card->updateStatusBasedOnSubtasks();
+            
+            DB::commit();
+            
+            return back()->with('success', 'Subtask started successfully!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Failed to start subtask: ' . $e->getMessage());
+        }
     }
 
     public function submitSubtask(Request $request, Project $project, Board $board, Card $card, Subtask $subtask)
@@ -88,6 +115,9 @@ class MemberSubtaskController extends Controller
                 'actual_hours' => $request->actual_hours ?? $subtask->actual_hours,
                 'completion_notes' => $request->completion_notes
             ]);
+
+            // Update card status based on subtask status
+            $card->updateStatusBasedOnSubtasks();
 
             DB::commit();
             
@@ -116,13 +146,24 @@ class MemberSubtaskController extends Controller
             'estimated_hours' => 'nullable|numeric|min:0'
         ]);
 
-        $subtask->update([
-            'subtask_title' => $request->subtask_title,
-            'description' => $request->description,
-            'estimated_hours' => $request->estimated_hours
-        ]);
+        DB::beginTransaction();
+        try {
+            $subtask->update([
+                'subtask_title' => $request->subtask_title,
+                'description' => $request->description,
+                'estimated_hours' => $request->estimated_hours
+            ]);
 
-        return back()->with('success', 'Subtask updated successfully.');
+            // Update card status after subtask update
+            $card->updateStatusBasedOnSubtasks();
+
+            DB::commit();
+            
+            return back()->with('success', 'Subtask updated successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Failed to update subtask: ' . $e->getMessage());
+        }
     }
 
     public function destroy(Project $project, Board $board, Card $card, Subtask $subtask)
@@ -137,8 +178,19 @@ class MemberSubtaskController extends Controller
             return back()->with('error', 'Cannot delete subtask that is in review or completed.');
         }
 
-        $subtask->delete();
-
-        return back()->with('success', 'Subtask deleted successfully.');
+        DB::beginTransaction();
+        try {
+            $subtask->delete();
+            
+            // Update card status after subtask deletion
+            $card->updateStatusBasedOnSubtasks();
+            
+            DB::commit();
+            
+            return back()->with('success', 'Subtask deleted successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Failed to delete subtask: ' . $e->getMessage());
+        }
     }
 }

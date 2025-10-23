@@ -264,53 +264,12 @@ class SubtaskController extends Controller
                 'completion_notes' => $request->completion_notes
             ]);
 
-            // Update card status based on subtask status
-            $card->updateStatusBasedOnSubtasks();
-
             DB::commit();
             
             return back()->with('success', 'Subtask submitted for review successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Failed to submit subtask: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Update a subtask (Leader only)
-     */
-    public function updateLeader(Request $request, Project $project, Board $board, Card $card, Subtask $subtask)
-    {
-        $this->checkLeaderAccess($project->project_id);
-
-        // Cannot edit if in review or done
-        if ($subtask->status === 'review' || $subtask->status === 'done') {
-            return back()->with('error', 'Cannot edit subtask that is in review or completed.');
-        }
-
-        $request->validate([
-            'subtask_title' => 'required|string|max:100',
-            'description' => 'nullable|string',
-            'estimated_hours' => 'nullable|numeric|min:0|max:9999'
-        ]);
-
-        DB::beginTransaction();
-        try {
-            $subtask->update([
-                'subtask_title' => $request->subtask_title,
-                'description' => $request->description,
-                'estimated_hours' => $request->estimated_hours
-            ]);
-
-            // Update card status after subtask update
-            $card->updateStatusBasedOnSubtasks();
-
-            DB::commit();
-            
-            return back()->with('success', 'Subtask updated successfully.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Failed to update subtask: ' . $e->getMessage());
         }
     }
 
@@ -358,6 +317,39 @@ class SubtaskController extends Controller
     }
 
     /**
+     * Delete a subtask (Member only)
+     */
+    public function destroyMember(Project $project, Board $board, Card $card, Subtask $subtask)
+    {
+        $this->checkMemberAccess($card->card_id);
+
+        // Check if the member is the creator of this subtask
+        if ($subtask->created_by !== Auth::id()) {
+            return back()->with('error', 'You can only delete your own subtasks.');
+        }
+
+        // Cannot delete if in review or done
+        if ($subtask->status === 'review' || $subtask->status === 'done') {
+            return back()->with('error', 'Cannot delete subtask that is in review or completed.');
+        }
+
+        DB::beginTransaction();
+        try {
+            $subtask->delete();
+            
+            // Update card status after subtask deletion
+            $card->updateStatusBasedOnSubtasks();
+            
+            DB::commit();
+            
+            return back()->with('success', 'Subtask deleted successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Failed to delete subtask: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Delete a subtask (Leader only - for management purposes)
      */
     public function destroyLeader(Project $project, Board $board, Card $card, Subtask $subtask)
@@ -390,22 +382,17 @@ class SubtaskController extends Controller
     }
 
     /**
-     * Delete a subtask (Member only)
+     * Delete a subtask (Leader only - for management purposes)
      */
-    public function destroyMember(Project $project, Board $board, Card $card, Subtask $subtask)
+    public function destroyLeader(Project $project, Board $board, Card $card, Subtask $subtask)
     {
-        $this->checkMemberAccess($card->card_id);
-
-        // Check if the member is the creator of this subtask
-        if ($subtask->created_by !== Auth::id()) {
-            return back()->with('error', 'You can only delete your own subtasks.');
-        }
-
-        // Cannot delete if in review or done
+        $this->checkLeaderAccess($project->project_id);
+        
+        // Only allow deletion if subtask is in todo or in_progress status
         if ($subtask->status === 'review' || $subtask->status === 'done') {
             return back()->with('error', 'Cannot delete subtask that is in review or completed.');
         }
-
+        
         DB::beginTransaction();
         try {
             $subtask->delete();
@@ -415,7 +402,11 @@ class SubtaskController extends Controller
             
             DB::commit();
             
-            return back()->with('success', 'Subtask deleted successfully.');
+            return redirect()->route('leader.card.show', [
+                'project' => $project,
+                'board' => $board,
+                'card' => $card
+            ])->with('success', 'Subtask deleted successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Failed to delete subtask: ' . $e->getMessage());
@@ -536,6 +527,76 @@ class SubtaskController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Failed to reject subtask: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete a subtask (Leader only - for management purposes)
+     */
+    public function destroyLeader(Project $project, Board $board, Card $card, Subtask $subtask)
+    {
+        $this->checkLeaderAccess($project->project_id);
+        
+        // Only allow deletion if subtask is in todo or in_progress status
+        if ($subtask->status === 'review' || $subtask->status === 'done') {
+            return back()->with('error', 'Cannot delete subtask that is in review or completed.');
+        }
+        
+        DB::beginTransaction();
+        try {
+            $subtask->delete();
+            
+            // Update card status after subtask deletion
+            $card->updateStatusBasedOnSubtasks();
+            
+            DB::commit();
+            
+            return redirect()->route('leader.card.show', [
+                'project' => $project,
+                'board' => $board,
+                'card' => $card
+            ])->with('success', 'Subtask deleted successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Failed to delete subtask: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update a subtask (Leader only)
+     */
+    public function updateLeader(Request $request, Project $project, Board $board, Card $card, Subtask $subtask)
+    {
+        $this->checkLeaderAccess($project->project_id);
+
+        // Cannot edit if in review or done
+        if ($subtask->status === 'review' || $subtask->status === 'done') {
+            return back()->with('error', 'Cannot edit subtask that is in review or completed.');
+        }
+
+        $request->validate([
+            'subtask_title' => 'required|string|max:100',
+            'description' => 'nullable|string',
+            'estimated_hours' => 'nullable|numeric|min:0|max:9999'
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $subtask->update([
+                'subtask_title' => $request->subtask_title,
+                'description' => $request->description,
+                'estimated_hours' => $request->estimated_hours
+            ]);
+
+            // Update card status after subtask update
+            $card->updateStatusBasedOnSubtasks();
+
+            DB::commit();
+            
+            return back()->with('success', 'Subtask updated successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Failed to update subtask: ' . $e->getMessage());
         }
     }
 }

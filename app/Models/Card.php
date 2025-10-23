@@ -67,4 +67,65 @@ class Card extends Model
     {
         return $this->hasMany(TimeLog::class, 'card_id', 'card_id');
     }
+
+    /**
+     * Check if any subtask is currently in progress
+     */
+    public function hasSubtaskInProgress()
+    {
+        return $this->subtasks()->where('status', 'in_progress')->exists();
+    }
+
+    /**
+     * Check if all subtasks are completed
+     */
+    public function allSubtasksCompleted()
+    {
+        $subtaskCount = $this->subtasks()->count();
+        if ($subtaskCount === 0) {
+            return false; // No subtasks means not completed
+        }
+        
+        return $this->subtasks()->where('status', 'done')->count() === $subtaskCount;
+    }
+
+    /**
+     * Check if card can be started (no subtasks in progress)
+     */
+    public function canBeStarted()
+    {
+        return !$this->hasSubtaskInProgress();
+    }
+
+    /**
+     * Check if any subtask can be started (no other subtask in progress)
+     */
+    public function canStartSubtask()
+    {
+        return !$this->hasSubtaskInProgress();
+    }
+
+    /**
+     * Update card status based on subtask completion
+     */
+    public function updateStatusBasedOnSubtasks()
+    {
+        if ($this->allSubtasksCompleted()) {
+            $this->update([
+                'status' => 'done',
+                'completed_at' => now()
+            ]);
+        } elseif ($this->hasSubtaskInProgress()) {
+            $this->update([
+                'status' => 'in_progress',
+                'started_at' => $this->started_at ?? now()
+            ]);
+        } else {
+            $this->update([
+                'status' => 'todo',
+                'started_at' => null,
+                'completed_at' => null
+            ]);
+        }
+    }
 }

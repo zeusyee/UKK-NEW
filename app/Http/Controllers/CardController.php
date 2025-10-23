@@ -193,4 +193,20 @@ class CardController extends Controller
             ->route('leader.project.details', $project)
             ->with('success', 'Card deleted successfully!');
     }
+
+    /**
+     * Start card (disabled - cards cannot be started directly)
+     */
+    public function start(Request $request, Project $project, Board $board, Card $card)
+    {
+        return back()->with('error', 'Cards cannot be started directly. Please start individual subtasks instead.');
+    }
+
+    /**
+     * Complete card (disabled - cards are completed automatically when all subtasks are done)
+     */
+    public function complete(Request $request, Project $project, Board $board, Card $card)
+    {
+        return back()->with('error', 'Cards are completed automatically when all subtasks are finished.');
+    }
 }
