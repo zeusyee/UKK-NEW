@@ -6,7 +6,6 @@ use App\Models\Subtask;
 use App\Models\Card;
 use App\Models\Board;
 use App\Models\Project;
-use App\Models\CardAssignment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -16,15 +15,15 @@ class MemberSubtaskController extends Controller
     private function checkMemberAccess($cardId)
     {
         // Check if member is assigned to this card
-        $assignment = CardAssignment::where('card_id', $cardId)
-            ->where('user_id', Auth::id())
+        $card = Card::where('card_id', $cardId)
+            ->where('assigned_user_id', Auth::id())
             ->first();
 
-        if (!$assignment) {
+        if (!$card) {
             abort(403, 'You are not assigned to this task.');
         }
 
-        return $assignment;
+        return $card;
     }
 
     public function store(Request $request, Project $project, Board $board, Card $card)

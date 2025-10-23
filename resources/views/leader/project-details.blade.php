@@ -160,28 +160,27 @@
                                         @endif
 
                                         <!-- Card Footer -->
-                                        <div class="flex justify-between items-center text-xs text-gray-500 pt-3 border-t border-gray-200">
-                                            <div>
-                                                @if($card->due_date)
-                                                    <i class="fas fa-calendar-alt mr-1"></i>
-                                                    {{ $card->due_date->format('M d') }}
-                                                @endif
-                                            </div>
-                                            <div class="flex -space-x-2">
-                                                @foreach($card->assignments->take(3) as $assignment)
-                                                    <div class="h-6 w-6 rounded-full bg-blue-500 border-2 border-white flex items-center justify-center text-white text-xs font-semibold"
-                                                         title="{{ $assignment->user->full_name }}">
-                                                        {{ strtoupper(substr($assignment->user->full_name, 0, 1)) }}
-                                                    </div>
-                                                @endforeach
-                                                @if($card->assignments->count() > 3)
-                                                    <div class="h-6 w-6 rounded-full bg-gray-400 border-2 border-white flex items-center justify-center text-white text-xs">
-                                                        +{{ $card->assignments->count() - 3 }}
-                                                    </div>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
+<!-- Card Footer -->
+<div class="flex justify-between items-center text-xs text-gray-500 pt-3 border-t border-gray-200">
+    <div>
+        @if($card->due_date)
+            <i class="fas fa-calendar-alt mr-1"></i>
+            {{ $card->due_date->format('M d') }}
+        @endif
+    </div>
+    <div class="flex -space-x-2">
+        @if($card->assignedUser)
+            <div class="h-6 w-6 rounded-full bg-blue-500 border-2 border-white flex items-center justify-center text-white text-xs font-semibold"
+                 title="{{ $card->assignedUser->full_name }}">
+                {{ strtoupper(substr($card->assignedUser->full_name, 0, 1)) }}
+            </div>
+        @else
+            <div class="h-6 w-6 rounded-full bg-gray-300 border-2 border-white flex items-center justify-center text-gray-500 text-xs">
+                <i class="fas fa-user-slash"></i>
+            </div>
+        @endif
+    </div>
+</div>
                                 @endforeach
                             </div>
                         @endif

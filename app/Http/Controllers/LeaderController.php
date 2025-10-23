@@ -36,19 +36,19 @@ class LeaderController extends Controller
                 ->with('error', 'You do not have permission to manage this project.');
         }
 
-        $project->load([
-            'creator', 
-            'members.user', 
-            'boards' => function($query) {
-                $query->orderBy('position', 'asc');
-            },
-            'boards.cards' => function($query) {
-                $query->orderBy('position', 'asc');
-            },
-            'boards.cards.subtasks',
-            'boards.cards.assignments.user',
-            'boards.cards.creator'
-        ]);
+$project->load([
+    'creator', 
+    'members.user', 
+    'boards' => function($query) {
+        $query->orderBy('position', 'asc');
+    },
+    'boards.cards' => function($query) {
+        $query->orderBy('position', 'asc');
+    },
+    'boards.cards.subtasks',
+    'boards.cards.assignedUser',
+    'boards.cards.creator'
+]);
         
         // Calculate project statistics
         $totalCards = 0;
