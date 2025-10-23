@@ -11,7 +11,8 @@ use App\Http\Controllers\BoardController;
 use App\Http\Controllers\CardController;
 use App\Http\Controllers\SubtaskController;
 use App\Http\Controllers\MemberCardController;
-use App\Http\Controllers\Admin\AdminReviewController;
+use App\Http\Controllers\MemberSubtaskController;
+use App\Http\Controllers\Leader\LeaderSubtaskReviewController;
 
 // Authentication Routes
 Route::middleware('guest')->group(function () {
@@ -66,16 +67,6 @@ Route::middleware('auth')->group(function () {
             ->name('admin.monitoring.index');
         Route::get('admin/monitoring/projects/{project}', [ProjectMonitoringController::class, 'projectDetails'])
             ->name('admin.monitoring.project-details');
-
-        // Review routes
-        Route::get('admin/review', [AdminReviewController::class, 'index'])
-            ->name('admin.review.index');
-        Route::get('admin/review/{card}', [AdminReviewController::class, 'show'])
-            ->name('admin.review.show');
-        Route::post('admin/review/{card}/approve', [AdminReviewController::class, 'approve'])
-            ->name('admin.review.approve');
-        Route::post('admin/review/{card}/reject', [AdminReviewController::class, 'reject'])
-            ->name('admin.review.reject');
     });
 
     // Leader routes (for users with 'leader' or 'admin' role in a project)
@@ -98,10 +89,14 @@ Route::middleware('auth')->group(function () {
         Route::put('/projects/{project}/boards/{board}/cards/{card}', [CardController::class, 'update'])->name('card.update');
         Route::delete('/projects/{project}/boards/{board}/cards/{card}', [CardController::class, 'destroy'])->name('card.destroy');
         
-        // Subtask management
-        Route::post('/projects/{project}/boards/{board}/cards/{card}/subtasks', [SubtaskController::class, 'store'])->name('subtask.store');
-        Route::put('/projects/{project}/boards/{board}/cards/{card}/subtasks/{subtask}', [SubtaskController::class, 'update'])->name('subtask.update');
-        Route::delete('/projects/{project}/boards/{board}/cards/{card}/subtasks/{subtask}', [SubtaskController::class, 'destroy'])->name('subtask.destroy');
+        // Subtask management (Leader can only delete)
+        Route::delete('/projects/{project}/boards/{board}/cards/{card}/subtasks/{subtask}', [SubtaskController::class, 'destroyLeader'])->name('subtask.destroy');
+        
+        // Subtask Review (Leader only)
+        Route::get('/review', [SubtaskController::class, 'reviewIndex'])->name('review.index');
+        Route::get('/projects/{project}/boards/{board}/cards/{card}/subtasks/{subtask}/review', [SubtaskController::class, 'reviewShow'])->name('review.show');
+        Route::post('/projects/{project}/boards/{board}/cards/{card}/subtasks/{subtask}/approve', [SubtaskController::class, 'approve'])->name('review.approve');
+        Route::post('/projects/{project}/boards/{board}/cards/{card}/subtasks/{subtask}/reject', [SubtaskController::class, 'reject'])->name('review.reject');
     });
 
     // Member routes (regular members, not leaders)
@@ -113,6 +108,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/my-tasks', [MemberCardController::class, 'myTasks'])->name('member.my-tasks');
         Route::get('/projects/{project}/boards/{board}/cards/{card}/task', [MemberCardController::class, 'showTask'])->name('member.task.show');
         Route::post('/projects/{project}/boards/{board}/cards/{card}/start', [MemberCardController::class, 'startTask'])->name('member.task.start');
-        Route::post('/projects/{project}/boards/{board}/cards/{card}/submit', [MemberCardController::class, 'submitTask'])->name('member.task.submit');
+        
+        // Member subtask routes
+        Route::post('/projects/{project}/boards/{board}/cards/{card}/subtasks', [SubtaskController::class, 'storeMember'])->name('member.subtask.store');
+        Route::put('/projects/{project}/boards/{board}/cards/{card}/subtasks/{subtask}', [SubtaskController::class, 'updateMember'])->name('member.subtask.update');
+        Route::delete('/projects/{project}/boards/{board}/cards/{card}/subtasks/{subtask}', [SubtaskController::class, 'destroyMember'])->name('member.subtask.destroy');
+        Route::post('/projects/{project}/boards/{board}/cards/{card}/subtasks/{subtask}/start', [SubtaskController::class, 'startSubtask'])->name('member.subtask.start');
+        Route::post('/projects/{project}/boards/{board}/cards/{card}/subtasks/{subtask}/submit', [SubtaskController::class, 'submitSubtask'])->name('member.subtask.submit');
     });
 });

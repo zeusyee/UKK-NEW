@@ -19,6 +19,21 @@
                 <a href="{{ route('leader.dashboard') }}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-green-700 hover:text-white">
                     <i class="fas fa-home mr-2"></i>Dashboard
                 </a>
+                <a href="{{ route('leader.review.index') }}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-green-700 hover:text-white">
+                    <i class="fas fa-clipboard-check mr-2"></i>Review Subtasks
+                    @php
+                        $user = Auth::user();
+                        $projectIds = \App\Models\ProjectMember::where('user_id', $user->user_id)
+                            ->whereIn('role', ['admin', 'leader'])
+                            ->pluck('project_id');
+                        $reviewCount = \App\Models\Subtask::whereHas('card.board.project', function($query) use ($projectIds) {
+                            $query->whereIn('project_id', $projectIds);
+                        })->where('status', 'review')->count();
+                    @endphp
+                    @if($reviewCount > 0)
+                        <span class="ml-2 px-2 py-1 text-xs bg-red-500 text-white rounded-full">{{ $reviewCount }}</span>
+                    @endif
+                </a>
                 <form method="POST" action="{{ route('logout') }}" class="block">
                     @csrf
                     <button type="submit" class="w-full text-left py-2.5 px-4 rounded transition duration-200 hover:bg-green-700 hover:text-white">

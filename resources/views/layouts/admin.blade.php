@@ -28,15 +28,6 @@
                 <a href="{{ route('admin.monitoring.index') }}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
                     <i class="fas fa-chart-line mr-2"></i>Monitoring
                 </a>
-                <a href="{{ route('admin.review.index') }}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">
-                    <i class="fas fa-clipboard-check mr-2"></i>Review Tasks
-                    @php
-                        $reviewCount = \App\Models\Card::where('status', 'review')->count();
-                    @endphp
-                    @if($reviewCount > 0)
-                        <span class="ml-2 px-2 py-1 text-xs bg-red-500 text-white rounded-full">{{ $reviewCount }}</span>
-                    @endif
-                </a>
                 <form method="POST" action="{{ route('logout') }}" class="block">
                     @csrf
                     <button type="submit" class="w-full text-left py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 hover:text-white">

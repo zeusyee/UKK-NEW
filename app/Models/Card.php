@@ -17,16 +17,12 @@ class Card extends Model
         'status',
         'priority',
         'estimated_hours',
-        'actual_hours',
-        'reviewed_by',
-        'reviewed_at',
-        'review_notes'
+        'actual_hours'
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
         'due_date' => 'date',
-        'reviewed_at' => 'datetime',
         'status' => 'string',
         'priority' => 'string',
         'estimated_hours' => 'decimal:2',
@@ -43,11 +39,6 @@ class Card extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by', 'user_id');
-    }
-
-    public function reviewer()
-    {
-        return $this->belongsTo(User::class, 'reviewed_by', 'user_id');
     }
 
     public function subtasks()
@@ -69,4 +60,8 @@ class Card extends Model
     {
         return $this->hasMany(TimeLog::class, 'card_id', 'card_id');
     }
+    public function reviewer()
+{
+    return $this->belongsTo(User::class, 'reviewer_id', 'user_id');
+}
 }

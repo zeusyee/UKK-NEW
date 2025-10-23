@@ -14,11 +14,17 @@ class Subtask extends Model
         'status',
         'estimated_hours',
         'actual_hours',
-        'position'
+        'position',
+        'created_by',
+        'reviewed_by',
+        'reviewed_at',
+        'review_notes',
+        'completion_notes'
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
+        'reviewed_at' => 'datetime',
         'status' => 'string',
         'estimated_hours' => 'decimal:2',
         'actual_hours' => 'decimal:2',
@@ -29,6 +35,16 @@ class Subtask extends Model
     public function card()
     {
         return $this->belongsTo(Card::class, 'card_id', 'card_id');
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by', 'user_id');
+    }
+
+    public function reviewer()
+    {
+        return $this->belongsTo(User::class, 'reviewed_by', 'user_id');
     }
 
     public function comments()
