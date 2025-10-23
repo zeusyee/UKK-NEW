@@ -13,6 +13,10 @@ class Card extends Model
         'description',
         'position',
         'created_by',
+        'assigned_user_id',
+        'assignment_status',
+        'started_at',
+        'completed_at',
         'due_date',
         'status',
         'priority',
@@ -23,8 +27,11 @@ class Card extends Model
     protected $casts = [
         'created_at' => 'datetime',
         'due_date' => 'date',
+        'started_at' => 'datetime',
+        'completed_at' => 'datetime',
         'status' => 'string',
         'priority' => 'string',
+        'assignment_status' => 'string',
         'estimated_hours' => 'decimal:2',
         'actual_hours' => 'decimal:2',
         'position' => 'integer'
@@ -41,14 +48,14 @@ class Card extends Model
         return $this->belongsTo(User::class, 'created_by', 'user_id');
     }
 
+    public function assignedUser()
+    {
+        return $this->belongsTo(User::class, 'assigned_user_id', 'user_id');
+    }
+
     public function subtasks()
     {
         return $this->hasMany(Subtask::class, 'card_id', 'card_id');
-    }
-
-    public function assignments()
-    {
-        return $this->hasMany(CardAssignment::class, 'card_id', 'card_id');
     }
 
     public function comments()
@@ -60,8 +67,4 @@ class Card extends Model
     {
         return $this->hasMany(TimeLog::class, 'card_id', 'card_id');
     }
-    public function reviewer()
-{
-    return $this->belongsTo(User::class, 'reviewer_id', 'user_id');
-}
 }

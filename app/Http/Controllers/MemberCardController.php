@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Card;
-use App\Models\CardAssignment;
 use App\Models\Project;
 use App\Models\Board;
 use Illuminate\Http\Request;
@@ -16,53 +15,48 @@ class MemberCardController extends Controller
     {
         $user = Auth::user();
         
-        // Get all card assignments for the current user
-        $assignments = CardAssignment::with(['card.board.project', 'card.creator'])
-            ->where('user_id', $user->user_id)
+        // Get all cards assigned to the current user only
+        $myCards = Card::with(['board.project', 'creator'])
+            ->where('assigned_user_id', $user->user_id)
             ->orderBy('created_at', 'desc')
             ->get();
         
-        return view('member.my-tasks', compact('assignments'));
+        return view('member.my-tasks', compact('myCards'));
     }
 
     public function showTask(Project $project, Board $board, Card $card)
     {
-        // Check if user is assigned to this card
-        $assignment = CardAssignment::where('card_id', $card->card_id)
-            ->where('user_id', Auth::id())
-            ->first();
-
-        if (!$assignment) {
+        // Check if the card is assigned to the current user
+        if ($card->assigned_user_id !== Auth::id()) {
             return redirect()->route('member.my-tasks')
-                ->with('error', 'You are not assigned to this task.');
+                ->with('error', 'You do not have access to this task.');
         }
 
-        $card->load(['board', 'creator', 'subtasks', 'assignments.user', 'reviewer']);
+        $card->load(['board', 'creator', 'subtasks' => function($query) {
+            // Only load subtasks created by the current user
+            $query->where('created_by', Auth::id());
+        }, 'assignedUser']);
         
-        return view('member.task-detail', compact('project', 'board', 'card', 'assignment'));
+        return view('member.task-detail', compact('project', 'board', 'card'));
     }
 
     public function startTask(Project $project, Board $board, Card $card)
     {
-        // Check if user is assigned to this card
-        $assignment = CardAssignment::where('card_id', $card->card_id)
-            ->where('user_id', Auth::id())
-            ->first();
+        // Check if the card is assigned to the current user
+        if ($card->assigned_user_id !== Auth::id()) {
+            return back()->with('error', 'You do not have access to this task.');
+        }
 
-        if (!$assignment) {
-            return back()->with('error', 'You are not assigned to this task.');
+        if ($card->assignment_status !== 'not_assigned') {
+            return back()->with('error', 'Task has already been started.');
         }
 
         DB::beginTransaction();
         try {
-            // Update assignment status
-            $assignment->update([
-                'assignment_status' => 'in_progress',
-                'started_at' => now()
-            ]);
-
             // Update card status
             $card->update([
+                'assignment_status' => 'in_progress',
+                'started_at' => now(),
                 'status' => 'in_progress'
             ]);
 
@@ -77,45 +71,36 @@ class MemberCardController extends Controller
 
     public function submitTask(Request $request, Project $project, Board $board, Card $card)
     {
+        // Check if the card is assigned to the current user
+        if ($card->assigned_user_id !== Auth::id()) {
+            return back()->with('error', 'You do not have access to this task.');
+        }
+
+        if ($card->assignment_status !== 'in_progress') {
+            return back()->with('error', 'Task must be in progress before submitting.');
+        }
+
         $request->validate([
             'actual_hours' => 'nullable|numeric|min:0',
             'completion_notes' => 'nullable|string'
         ]);
 
-        // Check if user is assigned to this card
-        $assignment = CardAssignment::where('card_id', $card->card_id)
-            ->where('user_id', Auth::id())
-            ->first();
-
-        if (!$assignment) {
-            return back()->with('error', 'You are not assigned to this task.');
-        }
-
-        if ($assignment->assignment_status !== 'in_progress') {
-            return back()->with('error', 'Task must be in progress before submitting.');
-        }
-
         DB::beginTransaction();
         try {
-            // Update assignment status
-            $assignment->update([
-                'assignment_status' => 'completed',
-                'completed_at' => now()
-            ]);
-
-            // Update card status and actual hours
+            // Update card status
             $card->update([
-                'status' => 'review',
-                'actual_hours' => $request->actual_hours ?? $card->actual_hours,
-                'review_notes' => $request->completion_notes
+                'assignment_status' => 'completed',
+                'completed_at' => now(),
+                'status' => 'done',
+                'actual_hours' => $request->actual_hours ?? $card->actual_hours
             ]);
 
             DB::commit();
             
-            return back()->with('success', 'Task submitted for review successfully!');
+            return back()->with('success', 'Task completed successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Failed to submit task: ' . $e->getMessage());
+            return back()->with('error', 'Failed to complete task: ' . $e->getMessage());
         }
     }
 }

@@ -29,7 +29,7 @@
             </div>
             
             <!-- Action Button -->
-            @if($assignment->assignment_status === 'not_assigned' && $card->status === 'todo')
+            @if($card->assignment_status === 'not_assigned' && $card->status === 'todo')
                 <form action="{{ route('member.task.start', ['project' => $project, 'board' => $board, 'card' => $card]) }}" method="POST">
                     @csrf
                     <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
@@ -78,12 +78,18 @@
             <div class="space-y-2">
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-600">Status:</span>
-                    <span class="font-semibold">{{ ucfirst(str_replace('_', ' ', $assignment->assignment_status)) }}</span>
+                    <span class="font-semibold">{{ ucfirst(str_replace('_', ' ', $card->assignment_status ?? 'not assigned')) }}</span>
                 </div>
-                @if($assignment->started_at)
+                @if($card->started_at)
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-600">Started At:</span>
-                        <span class="font-semibold">{{ $assignment->started_at->format('M d, Y H:i') }}</span>
+                        <span class="font-semibold">{{ $card->started_at->format('M d, Y H:i') }}</span>
+                    </div>
+                @endif
+                @if($card->completed_at)
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Completed At:</span>
+                        <span class="font-semibold">{{ $card->completed_at->format('M d, Y H:i') }}</span>
                     </div>
                 @endif
             </div>
@@ -99,10 +105,14 @@
                     ({{ $card->subtasks->where('created_by', Auth::id())->where('status', 'done')->count() }}/{{ $card->subtasks->where('created_by', Auth::id())->count() }} completed)
                 </span>
             </h3>
-            @if($assignment->assignment_status !== 'not_assigned')
+            @if($card->assignment_status !== 'not_assigned')
                 <button onclick="toggleSubtaskForm()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
                     <i class="fas fa-plus mr-2"></i>Add Subtask
                 </button>
+            @else
+                <p class="text-sm text-gray-500">
+                    <i class="fas fa-info-circle mr-1"></i>Start the task first to add subtasks
+                </p>
             @endif
         </div>
 

@@ -12,35 +12,50 @@ class MemberController extends Controller
     public function dashboard()
     {
         $user = Auth::user();
-        $assignedProjects = $user->projects()
-            ->with(['project.creator'])
+        
+        // Get projects where user has at least one assigned card
+        $projectIds = \App\Models\Card::where('assigned_user_id', $user->user_id)
+            ->with('board.project')
             ->get()
-            ->pluck('project');
+            ->pluck('board.project_id')
+            ->unique();
+        
+        $assignedProjects = Project::whereIn('project_id', $projectIds)
+            ->with(['creator'])
+            ->get();
         
         return view('member.dashboard', compact('assignedProjects'));
     }
 
     public function projectDetails(Project $project)
     {
-        // Check if the authenticated user is a member of this project
-        $isMember = ProjectMember::where('project_id', $project->project_id)
-            ->where('user_id', Auth::id())
-            ->exists();
+        $user = Auth::user();
+        
+        // Check if the user has any assigned cards in this project
+        $hasAssignedCards = \App\Models\Card::whereHas('board', function($query) use ($project) {
+            $query->where('project_id', $project->project_id);
+        })
+        ->where('assigned_user_id', $user->user_id)
+        ->exists();
 
-        if (!$isMember) {
+        if (!$hasAssignedCards) {
             return redirect()->route('member.dashboard')
                 ->with('error', 'You do not have access to this project.');
         }
 
-        $project->load(['creator', 'members.user', 'boards.cards']);
+        $project->load(['creator', 'members.user', 'boards.cards' => function($query) use ($user) {
+            // Only load cards assigned to the current user
+            $query->where('assigned_user_id', $user->user_id);
+        }]);
         
-        // Calculate total tasks (cards) and completed tasks
+        // Calculate total tasks (only user's cards) and completed tasks
         $totalCards = 0;
         $completedCards = 0;
         
         foreach ($project->boards as $board) {
-            $totalCards += $board->cards->count();
-            $completedCards += $board->cards->where('status', 'done')->count();
+            $userCards = $board->cards->where('assigned_user_id', $user->user_id);
+            $totalCards += $userCards->count();
+            $completedCards += $userCards->where('status', 'done')->count();
         }
         
         $projectStats = [

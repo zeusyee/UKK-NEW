@@ -69,15 +69,9 @@
                             name="priority" 
                             required
                             class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
-                        <option value="low" {{ old('priority') === 'low' ? 'selected' : '' }}>
-                            <span class="text-green-600">●</span> Low
-                        </option>
-                        <option value="medium" {{ old('priority', 'medium') === 'medium' ? 'selected' : '' }}>
-                            <span class="text-yellow-600">●</span> Medium
-                        </option>
-                        <option value="high" {{ old('priority') === 'high' ? 'selected' : '' }}>
-                            <span class="text-red-600">●</span> High
-                        </option>
+                        <option value="low" {{ old('priority') === 'low' ? 'selected' : '' }}>Low</option>
+                        <option value="medium" {{ old('priority', 'medium') === 'medium' ? 'selected' : '' }}>Medium</option>
+                        <option value="high" {{ old('priority') === 'high' ? 'selected' : '' }}>High</option>
                     </select>
                     @error('priority')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -135,36 +129,43 @@
                     @enderror
                 </div>
 
-                <!-- Assign To Members -->
+                <!-- Assign To Member (Single Selection) -->
                 <div class="md:col-span-2">
                     <label class="block text-sm font-medium text-gray-700 mb-3">
-                        <i class="fas fa-users mr-2"></i>Assign To Team Members
+                        <i class="fas fa-user mr-2"></i>Assign To Team Member (Select One)
                     </label>
                     @if($projectMembers->isEmpty())
-                        <p class="text-gray-500 text-sm">No team members available to assign.</p>
+                        <p class="text-red-500 text-sm">
+                            <i class="fas fa-exclamation-circle mr-2"></i>
+                            No available team members. All members in this project are already assigned to other cards.
+                        </p>
                     @else
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-3 max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-4 bg-gray-50">
                             @foreach($projectMembers as $member)
                                 <label class="flex items-center space-x-3 cursor-pointer hover:bg-white p-3 rounded-lg transition-colors border border-transparent hover:border-green-200">
-                                    <input type="checkbox" 
-                                           name="assigned_users[]" 
+                                    <input type="radio" 
+                                           name="assigned_user_id" 
                                            value="{{ $member->user_id }}"
-                                           {{ in_array($member->user_id, old('assigned_users', [])) ? 'checked' : '' }}
-                                           class="rounded text-green-500 focus:ring-green-500">
+                                           {{ old('assigned_user_id') == $member->user_id ? 'checked' : '' }}
+                                           class="text-green-500 focus:ring-green-500">
                                     <div class="flex items-center space-x-2">
                                         <div class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-sm">
                                             {{ strtoupper(substr($member->user->full_name, 0, 1)) }}
                                         </div>
                                         <div>
                                             <p class="text-sm font-medium text-gray-800">{{ $member->user->full_name }}</p>
-                                            <p class="text-xs text-gray-500">{{ ucfirst($member->role) }}</p>
+                                            <p class="text-xs text-gray-500">{{ $member->user->email }}</p>
                                         </div>
                                     </div>
                                 </label>
                             @endforeach
                         </div>
+                        <p class="text-xs text-gray-500 mt-2">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Each member can only be assigned to one card at a time in this project.
+                        </p>
                     @endif
-                    @error('assigned_users')
+                    @error('assigned_user_id')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
                 </div>
