@@ -36,51 +36,50 @@ class CardController extends Controller
         return view('leader.cards.create', compact('project', 'board', 'projectMembers'));
     }
 
-    public function store(Request $request, Project $project, Board $board)
-    {
-        $this->checkLeaderAccess($project->project_id);
+   public function store(Request $request, Project $project, Board $board)
+{
+    $this->checkLeaderAccess($project->project_id);
 
-        $validated = $request->validate([
-            'card_title' => 'required|string|max:100',
-            'description' => 'nullable|string',
-            'due_date' => 'nullable|date',
-            'status' => 'nullable|in:todo,in_progress,review,done',
-            'priority' => 'required|in:low,medium,high',
-            'estimated_hours' => 'nullable|numeric|min:0|max:9999',
-            'position' => 'nullable|integer|min:0',
-            'assigned_users' => 'nullable|array',
-            'assigned_users.*' => 'exists:users,user_id'
-        ]);
+    $validated = $request->validate([
+        'card_title' => 'required|string|max:100',
+        'description' => 'nullable|string',
+        'due_date' => 'nullable|date',
+        // HAPUS 'status' dari validasi
+        'priority' => 'required|in:low,medium,high',
+        'estimated_hours' => 'nullable|numeric|min:0|max:9999',
+        'position' => 'nullable|integer|min:0',
+        'assigned_users' => 'nullable|array',
+        'assigned_users.*' => 'exists:users,user_id'
+    ]);
 
-        // Create the card
-        $card = Card::create([
-            'board_id' => $board->board_id,
-            'card_title' => $validated['card_title'],
-            'description' => $validated['description'] ?? null,
-            'due_date' => $validated['due_date'] ?? null,
-            'status' => $validated['status'] ?? null,
-            'priority' => $validated['priority'],
-            'estimated_hours' => $validated['estimated_hours'] ?? null,
-            'position' => $validated['position'] ?? 0,
-            'created_by' => Auth::id()
-        ]);
+    // Create the card - status otomatis 'todo'
+    $card = Card::create([
+        'board_id' => $board->board_id,
+        'card_title' => $validated['card_title'],
+        'description' => $validated['description'] ?? null,
+        'due_date' => $validated['due_date'] ?? null,
+        'status' => 'todo', // SET DEFAULT STATUS
+        'priority' => $validated['priority'],
+        'estimated_hours' => $validated['estimated_hours'] ?? null,
+        'position' => $validated['position'] ?? 0,
+        'created_by' => Auth::id()
+    ]);
 
-        // Assign users to card if any
-        if (!empty($validated['assigned_users'])) {
-            foreach ($validated['assigned_users'] as $userId) {
-                CardAssignment::create([
-                    'card_id' => $card->card_id,
-                    'user_id' => $userId,
-                    'assignment_status' => 'not_assigned'
-                ]);
-            }
+    // Assign users to card if any
+    if (!empty($validated['assigned_users'])) {
+        foreach ($validated['assigned_users'] as $userId) {
+            CardAssignment::create([
+                'card_id' => $card->card_id,
+                'user_id' => $userId,
+                'assignment_status' => 'not_assigned'
+            ]);
         }
-
-        return redirect()
-            ->route('leader.card.show', ['project' => $project, 'board' => $board, 'card' => $card])
-            ->with('success', 'Card created successfully!');
     }
 
+    return redirect()
+        ->route('leader.card.show', ['project' => $project, 'board' => $board, 'card' => $card])
+        ->with('success', 'Card created successfully!');
+}
     public function show(Project $project, Board $board, Card $card)
     {
         $this->checkLeaderAccess($project->project_id);
@@ -118,7 +117,7 @@ class CardController extends Controller
             'card_title' => 'required|string|max:100',
             'description' => 'nullable|string',
             'due_date' => 'nullable|date',
-            'status' => 'required|in:todo,in_progress,review,done',
+            'status' => 'nullable|in:todo,in_progress,review,done',
             'priority' => 'required|in:low,medium,high',
             'estimated_hours' => 'nullable|numeric|min:0|max:9999',
             'actual_hours' => 'nullable|numeric|min:0|max:9999',
