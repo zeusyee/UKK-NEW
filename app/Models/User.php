@@ -71,11 +71,11 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the card assignments for the user.
+     * Get the cards assigned to the user.
      */
-    public function cardAssignments()
+    public function assignedCards()
     {
-        return $this->hasMany(CardAssignment::class, 'user_id', 'user_id');
+        return $this->hasMany(Card::class, 'assigned_user_id', 'user_id');
     }
 
     /**
