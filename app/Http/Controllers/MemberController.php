@@ -13,12 +13,9 @@ class MemberController extends Controller
     {
         $user = Auth::user();
         
-        // Get projects where user has at least one assigned card
-        $projectIds = \App\Models\Card::where('assigned_user_id', $user->user_id)
-            ->with('board.project')
-            ->get()
-            ->pluck('board.project_id')
-            ->unique();
+        // Get all projects where user is a member
+        $projectIds = ProjectMember::where('user_id', $user->user_id)
+            ->pluck('project_id');
         
         $assignedProjects = Project::whereIn('project_id', $projectIds)
             ->with(['creator'])
@@ -31,40 +28,54 @@ class MemberController extends Controller
     {
         $user = Auth::user();
         
-        // Check if the user has any assigned cards in this project
-        $hasAssignedCards = \App\Models\Card::whereHas('board', function($query) use ($project) {
-            $query->where('project_id', $project->project_id);
-        })
-        ->where('assigned_user_id', $user->user_id)
-        ->exists();
+        // Check if the user is a member of this project
+        $isMember = ProjectMember::where('project_id', $project->project_id)
+            ->where('user_id', $user->user_id)
+            ->exists();
 
-        if (!$hasAssignedCards) {
+        if (!$isMember) {
             return redirect()->route('member.dashboard')
-                ->with('error', 'You do not have access to this project.');
+                ->with('error', 'You are not a member of this project.');
         }
 
-        $project->load(['creator', 'members.user', 'boards.cards' => function($query) use ($user) {
-            // Only load cards assigned to the current user
-            $query->where('assigned_user_id', $user->user_id);
-        }]);
+        // Load project with boards and cards assigned to the user
+        $project->load([
+            'creator', 
+            'members.user', 
+            'boards.cards' => function($query) use ($user) {
+                $query->where('assigned_user_id', $user->user_id)
+                      ->with(['assignedUser', 'subtasks']);
+            }
+        ]);
         
-        // Calculate total tasks (only user's cards) and completed tasks
+        // Calculate total cards and completed cards for this user
         $totalCards = 0;
         $completedCards = 0;
+        $totalSubtasks = 0;
+        $completedSubtasks = 0;
         
         foreach ($project->boards as $board) {
-            $userCards = $board->cards->where('assigned_user_id', $user->user_id);
-            $totalCards += $userCards->count();
-            $completedCards += $userCards->where('status', 'done')->count();
+            foreach ($board->cards as $card) {
+                $totalCards++;
+                if ($card->status === 'done') {
+                    $completedCards++;
+                }
+                $totalSubtasks += $card->subtasks->count();
+                $completedSubtasks += $card->subtasks->where('status', 'done')->count();
+            }
         }
         
         $projectStats = [
-            'total_boards' => $project->boards->count(),
-            'total_tasks' => $totalCards,
-            'completed_tasks' => $completedCards,
+            'total_cards' => $totalCards,
+            'completed_cards' => $completedCards,
+            'total_subtasks' => $totalSubtasks,
+            'completed_subtasks' => $completedSubtasks,
             'active_members' => $project->members->count(),
-            'progress_percentage' => $totalCards > 0 
+            'card_progress' => $totalCards > 0 
                 ? round(($completedCards / $totalCards) * 100) 
+                : 0,
+            'subtask_progress' => $totalSubtasks > 0 
+                ? round(($completedSubtasks / $totalSubtasks) * 100) 
                 : 0
         ];
 

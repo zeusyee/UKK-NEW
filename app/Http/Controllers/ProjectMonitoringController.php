@@ -10,7 +10,7 @@ class ProjectMonitoringController extends Controller
 {
     public function index()
     {
-        $projects = Project::with(['creator', 'members.user'])
+        $projects = Project::with(['creator', 'members.user', 'boards.cards.subtasks'])
             ->withCount('members')
             ->get();
 
@@ -20,6 +20,8 @@ class ProjectMonitoringController extends Controller
         // Calculate project statistics
         $projectStats = [
             'total' => $projects->count(),
+            'active' => $projects->where('status', 'active')->count(),
+            'completed' => $projects->where('status', 'completed')->count(),
             'with_deadline' => $projects->filter(function($project) {
                 return !is_null($project->deadline);
             })->count(),
@@ -37,17 +39,54 @@ class ProjectMonitoringController extends Controller
             })->count()
         ];
 
-        // Get member distribution
-        $memberDistribution = $projects->mapWithKeys(function($project) {
-            return [$project->project_name => $project->members_count];
-        });
+        // Calculate project progress
+        $projectProgress = $projects->map(function($project) {
+            $totalCards = 0;
+            $completedCards = 0;
+            $totalSubtasks = 0;
+            $completedSubtasks = 0;
+            
+            foreach ($project->boards as $board) {
+                foreach ($board->cards as $card) {
+                    $totalCards++;
+                    if ($card->status === 'done') {
+                        $completedCards++;
+                    }
+                    
+                    foreach ($card->subtasks as $subtask) {
+                        $totalSubtasks++;
+                        if ($subtask->status === 'done') {
+                            $completedSubtasks++;
+                        }
+                    }
+                }
+            }
+            
+            // Calculate overall progress
+            $overallProgress = 0;
+            if ($totalSubtasks > 0) {
+                $overallProgress = round(($completedSubtasks / $totalSubtasks) * 100);
+            } elseif ($totalCards > 0) {
+                $overallProgress = round(($completedCards / $totalCards) * 100);
+            }
+            
+            return [
+                'project_name' => $project->project_name,
+                'progress' => $overallProgress,
+                'status' => $project->status,
+                'total_cards' => $totalCards,
+                'completed_cards' => $completedCards,
+                'total_subtasks' => $totalSubtasks,
+                'completed_subtasks' => $completedSubtasks
+            ];
+        })->sortByDesc('progress');
 
         return view('admin.monitoring.index', compact(
             'projects', 
             'projectStats', 
             'workingUsers', 
             'idleUsers',
-            'memberDistribution'
+            'projectProgress'
         ));
     }
 

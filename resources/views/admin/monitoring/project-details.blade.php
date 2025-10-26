@@ -47,13 +47,27 @@
                             {{ date('M d, Y', strtotime($project->deadline)) }}
                         </p>
                         @php
-                            $daysUntil = now()->diffInDays($project->deadline, false);
+                            $daysUntil = (int) floor(now()->diffInDays($project->deadline, false));
                         @endphp
-                        @if($daysUntil < 0)
-                            <p class="text-sm text-red-600">{{ abs($daysUntil) }} days overdue</p>
-                        @else
-                            <p class="text-sm text-gray-600">{{ $daysUntil }} days remaining</p>
-                        @endif
+                        <div class="mt-2">
+                            @if($daysUntil < 0)
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                    <i class="fas fa-exclamation-circle mr-1"></i>{{ abs($daysUntil) }} hari terlambat
+                                </span>
+                            @elseif($daysUntil == 0)
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">
+                                    <i class="fas fa-clock mr-1"></i>Deadline hari ini!
+                                </span>
+                            @elseif($daysUntil <= 7)
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                    <i class="fas fa-hourglass-half mr-1"></i>{{ $daysUntil }} hari tersisa
+                                </span>
+                            @else
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                    <i class="fas fa-check-circle mr-1"></i>{{ $daysUntil }} hari tersisa
+                                </span>
+                            @endif
+                        </div>
                     @else
                         <p class="text-lg font-semibold text-gray-800">No deadline</p>
                     @endif

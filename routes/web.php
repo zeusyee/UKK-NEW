@@ -7,7 +7,6 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProjectMonitoringController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\LeaderController;
-use App\Http\Controllers\BoardController;
 use App\Http\Controllers\CardController;
 use App\Http\Controllers\SubtaskController;
 use App\Http\Controllers\MemberCardController;
@@ -50,6 +49,10 @@ Route::middleware('auth')->group(function () {
             ->name('admin.projects.add-member');
         Route::delete('admin/projects/{project}/members/{member}', [ProjectController::class, 'removeMember'])
             ->name('admin.projects.remove-member');
+        
+        // Complete project route
+        Route::post('admin/projects/{project}/complete', [ProjectController::class, 'completeProject'])
+            ->name('admin.projects.complete');
 
         // User management routes
         Route::resource('admin/users', UserController::class)->names([
@@ -73,13 +76,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('leader')->name('leader.')->group(function () {
         Route::get('/dashboard', [LeaderController::class, 'dashboard'])->name('dashboard');
         Route::get('/projects/{project}', [LeaderController::class, 'projectDetails'])->name('project.details');
-        
-        // Board management
-        Route::get('/projects/{project}/boards/create', [BoardController::class, 'create'])->name('board.create');
-        Route::post('/projects/{project}/boards', [BoardController::class, 'store'])->name('board.store');
-        Route::get('/projects/{project}/boards/{board}/edit', [BoardController::class, 'edit'])->name('board.edit');
-        Route::put('/projects/{project}/boards/{board}', [BoardController::class, 'update'])->name('board.update');
-        Route::delete('/projects/{project}/boards/{board}', [BoardController::class, 'destroy'])->name('board.destroy');
+        Route::get('/projects/{project}/monitoring', [LeaderController::class, 'monitoring'])->name('project.monitoring');
         
         // Card management
         Route::get('/projects/{project}/boards/{board}/cards/create', [CardController::class, 'create'])->name('card.create');
@@ -110,10 +107,12 @@ Route::middleware('auth')->group(function () {
         Route::post('/projects/{project}/boards/{board}/cards/{card}/start', [MemberCardController::class, 'startTask'])->name('member.task.start');
         
         // Member subtask routes
-        Route::post('/projects/{project}/boards/{board}/cards/{card}/subtasks', [SubtaskController::class, 'storeMember'])->name('member.subtask.store');
-        Route::put('/projects/{project}/boards/{board}/cards/{card}/subtasks/{subtask}', [SubtaskController::class, 'updateMember'])->name('member.subtask.update');
-        Route::delete('/projects/{project}/boards/{board}/cards/{card}/subtasks/{subtask}', [SubtaskController::class, 'destroyMember'])->name('member.subtask.destroy');
-        Route::post('/projects/{project}/boards/{board}/cards/{card}/subtasks/{subtask}/start', [SubtaskController::class, 'startSubtask'])->name('member.subtask.start');
-        Route::post('/projects/{project}/boards/{board}/cards/{card}/subtasks/{subtask}/submit', [SubtaskController::class, 'submitSubtask'])->name('member.subtask.submit');
+        Route::post('/projects/{project}/boards/{board}/cards/{card}/subtasks', [MemberSubtaskController::class, 'store'])->name('member.subtask.store');
+        Route::put('/projects/{project}/boards/{board}/cards/{card}/subtasks/{subtask}', [MemberSubtaskController::class, 'update'])->name('member.subtask.update');
+        Route::delete('/projects/{project}/boards/{board}/cards/{card}/subtasks/{subtask}', [MemberSubtaskController::class, 'destroy'])->name('member.subtask.destroy');
+        Route::post('/projects/{project}/boards/{board}/cards/{card}/subtasks/{subtask}/start', [MemberSubtaskController::class, 'startSubtask'])->name('member.subtask.start');
+        Route::post('/projects/{project}/boards/{board}/cards/{card}/subtasks/{subtask}/pause', [MemberSubtaskController::class, 'pauseSubtask'])->name('member.subtask.pause');
+        Route::post('/projects/{project}/boards/{board}/cards/{card}/subtasks/{subtask}/resume', [MemberSubtaskController::class, 'resumeSubtask'])->name('member.subtask.resume');
+        Route::post('/projects/{project}/boards/{board}/cards/{card}/subtasks/{subtask}/submit', [MemberSubtaskController::class, 'submitSubtask'])->name('member.subtask.submit');
     });
 });

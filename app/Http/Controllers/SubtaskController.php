@@ -31,34 +31,44 @@ class SubtaskController extends Controller
     }
 
     /**
-     * Check if user is a member assigned to the card
+     * Check if user is a member of the project
      */
-    private function checkMemberAccess($cardId)
+    private function checkMemberAccess($projectId)
     {
-        $card = Card::where('card_id', $cardId)
-            ->where('assigned_user_id', Auth::id())
+        $member = \App\Models\ProjectMember::where('project_id', $projectId)
+            ->where('user_id', Auth::id())
             ->first();
 
-        if (!$card) {
-            abort(403, 'You are not assigned to this task.');
+        if (!$member) {
+            abort(403, 'You are not a member of this project.');
         }
 
-        return $card;
+        return $member;
     }
 
     /**
-     * Store a new subtask (Member only)
+     * Store a new subtask (Leader creates and assigns to member)
      */
     public function storeMember(Request $request, Project $project, Board $board, Card $card)
     {
-        $this->checkMemberAccess($card->card_id);
+        $this->checkLeaderAccess($project->project_id);
 
         $request->validate([
             'subtask_title' => 'required|string|max:100',
             'description' => 'nullable|string',
             'estimated_hours' => 'nullable|numeric|min:0|max:9999',
-            'position' => 'nullable|integer|min:0'
+            'position' => 'nullable|integer|min:0',
+            'assigned_user_id' => 'required|exists:users,user_id'
         ]);
+
+        // Verify that assigned user is a member of the project
+        $isMember = ProjectMember::where('project_id', $project->project_id)
+            ->where('user_id', $request->assigned_user_id)
+            ->exists();
+
+        if (!$isMember) {
+            return back()->with('error', 'The selected user is not a member of this project.');
+        }
 
         Subtask::create([
             'card_id' => $card->card_id,
@@ -67,14 +77,15 @@ class SubtaskController extends Controller
             'status' => 'todo',
             'estimated_hours' => $request->estimated_hours,
             'position' => $request->position ?? 0,
-            'created_by' => Auth::id()
+            'created_by' => Auth::id(),
+            'assigned_user_id' => $request->assigned_user_id
         ]);
 
-        return redirect()->route('member.task.show', [
+        return redirect()->route('leader.card.show', [
             'project' => $project,
             'board' => $board,
             'card' => $card
-        ])->with('success', 'Subtask created successfully.');
+        ])->with('success', 'Subtask created and assigned successfully.');
     }
 
     /**
@@ -82,20 +93,28 @@ class SubtaskController extends Controller
      */
     public function startSubtask(Request $request, Project $project, Board $board, Card $card, Subtask $subtask)
     {
-        $this->checkMemberAccess($card->card_id);
+        $this->checkMemberAccess($project->project_id);
 
-        // Check if the member is the creator of this subtask
-        if ($subtask->created_by !== Auth::id()) {
-            return back()->with('error', 'You can only start your own subtasks.');
+        // Check if the member is assigned to this subtask
+        if ($subtask->assigned_user_id !== Auth::id()) {
+            return back()->with('error', 'You are not assigned to this subtask.');
         }
 
         if ($subtask->status !== 'todo') {
             return back()->with('error', 'Subtask must be in "To Do" status to start.');
         }
 
-        $subtask->update(['status' => 'in_progress']);
-
-        return back()->with('success', 'Subtask started successfully!');
+        DB::beginTransaction();
+        try {
+            // Use the model method to start the subtask (includes validation)
+            $subtask->startSubtask(Auth::id());
+            
+            DB::commit();
+            return back()->with('success', 'Subtask started successfully!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', $e->getMessage());
+        }
     }
 
     /**
@@ -103,11 +122,11 @@ class SubtaskController extends Controller
      */
     public function submitSubtask(Request $request, Project $project, Board $board, Card $card, Subtask $subtask)
     {
-        $this->checkMemberAccess($card->card_id);
+        $this->checkMemberAccess($project->project_id);
 
-        // Check if the member is the creator of this subtask
-        if ($subtask->created_by !== Auth::id()) {
-            return back()->with('error', 'You can only submit your own subtasks.');
+        // Check if the member is assigned to this subtask
+        if ($subtask->assigned_user_id !== Auth::id()) {
+            return back()->with('error', 'You are not assigned to this subtask.');
         }
 
         if ($subtask->status !== 'in_progress') {
@@ -137,15 +156,15 @@ class SubtaskController extends Controller
     }
 
     /**
-     * Update a subtask (Member only)
+     * Update a subtask (Member only - can edit description/notes)
      */
     public function updateMember(Request $request, Project $project, Board $board, Card $card, Subtask $subtask)
     {
-        $this->checkMemberAccess($card->card_id);
+        $this->checkMemberAccess($project->project_id);
 
-        // Check if the member is the creator of this subtask
-        if ($subtask->created_by !== Auth::id()) {
-            return back()->with('error', 'You can only edit your own subtasks.');
+        // Check if the member is assigned to this subtask
+        if ($subtask->assigned_user_id !== Auth::id()) {
+            return back()->with('error', 'You are not assigned to this subtask.');
         }
 
         // Cannot edit if in review or done
@@ -154,31 +173,24 @@ class SubtaskController extends Controller
         }
 
         $request->validate([
-            'subtask_title' => 'required|string|max:100',
-            'description' => 'nullable|string',
-            'estimated_hours' => 'nullable|numeric|min:0|max:9999'
+            'completion_notes' => 'nullable|string',
+            'actual_hours' => 'nullable|numeric|min:0|max:9999'
         ]);
 
         $subtask->update([
-            'subtask_title' => $request->subtask_title,
-            'description' => $request->description,
-            'estimated_hours' => $request->estimated_hours
+            'completion_notes' => $request->completion_notes,
+            'actual_hours' => $request->actual_hours ?? $subtask->actual_hours
         ]);
 
         return back()->with('success', 'Subtask updated successfully.');
     }
 
     /**
-     * Delete a subtask (Member only)
+     * Delete a subtask (Leader only)
      */
     public function destroyMember(Project $project, Board $board, Card $card, Subtask $subtask)
     {
-        $this->checkMemberAccess($card->card_id);
-
-        // Check if the member is the creator of this subtask
-        if ($subtask->created_by !== Auth::id()) {
-            return back()->with('error', 'You can only delete your own subtasks.');
-        }
+        $this->checkLeaderAccess($project->project_id);
 
         // Cannot delete if in review or done
         if ($subtask->status === 'review' || $subtask->status === 'done') {
@@ -253,22 +265,23 @@ class SubtaskController extends Controller
                 'status' => 'done',
                 'reviewed_by' => Auth::id(),
                 'reviewed_at' => now(),
-                'review_notes' => $request->leader_notes
+                'review_notes' => $request->leader_notes,
+                'completed_at' => now()
             ]);
 
-            // Check if all subtasks are done, update card status
-            $allSubtasksDone = $card->subtasks()
-                ->where('status', '!=', 'done')
-                ->count() === 0;
-
-            if ($allSubtasksDone && $card->subtasks()->count() > 0) {
-                $card->update(['status' => 'done']);
-            }
+            // Automatically check and update card status based on all subtasks
+            // This will mark card as 'done' if all subtasks are completed
+            $card->checkAndUpdateCompletion();
 
             DB::commit();
             
+            $message = 'Subtask approved successfully!';
+            if ($card->status === 'done') {
+                $message .= ' All subtasks completed - Card marked as Done! 🎉';
+            }
+            
             return redirect()->route('leader.review.index')
-                ->with('success', 'Subtask approved successfully!');
+                ->with('success', $message);
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Failed to approve subtask: ' . $e->getMessage());
@@ -297,8 +310,12 @@ class SubtaskController extends Controller
                 'status' => 'in_progress',
                 'reviewed_by' => Auth::id(),
                 'reviewed_at' => now(),
-                'review_notes' => $request->rejection_reason
+                'review_notes' => $request->rejection_reason,
+                'completed_at' => null
             ]);
+
+            // Update card status based on subtasks
+            $card->checkAndUpdateCompletion();
 
             DB::commit();
             

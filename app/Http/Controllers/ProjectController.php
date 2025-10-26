@@ -48,11 +48,23 @@ class ProjectController extends Controller
 
     public function edit(Project $project)
     {
+        // Prevent editing completed projects
+        if ($project->status === 'completed') {
+            return redirect()->route('admin.projects.index')
+                ->with('error', 'Cannot edit a completed project.');
+        }
+        
         return view('admin.projects.edit', compact('project'));
     }
 
     public function update(Request $request, Project $project)
     {
+        // Prevent updating completed projects
+        if ($project->status === 'completed') {
+            return redirect()->route('admin.projects.index')
+                ->with('error', 'Cannot update a completed project.');
+        }
+        
         $request->validate([
             'project_name' => 'required|string|max:100',
             'description' => 'nullable|string',
@@ -71,6 +83,12 @@ class ProjectController extends Controller
 
     public function destroy(Project $project)
     {
+        // Prevent deleting completed projects
+        if ($project->status === 'completed') {
+            return redirect()->route('admin.projects.index')
+                ->with('error', 'Cannot delete a completed project.');
+        }
+        
         $project->delete();
         return redirect()->route('admin.projects.index')
             ->with('success', 'Project deleted successfully.');
@@ -78,12 +96,18 @@ class ProjectController extends Controller
 
     public function show(Project $project)
     {
-        $project->load(['creator', 'members.user', 'boards']);
+        $project->load(['creator', 'members.user', 'boards', 'completedBy']);
         return view('admin.projects.show', compact('project'));
     }
 
     public function members(Project $project)
     {
+        // Prevent managing members of completed projects
+        if ($project->status === 'completed') {
+            return redirect()->route('admin.projects.index')
+                ->with('error', 'Cannot manage members of a completed project.');
+        }
+        
         $project->load(['members.user']);
         $availableUsers = \App\Models\User::whereNotIn('user_id', $project->members->pluck('user_id'))
             ->where('current_task_status', 'idle')
@@ -93,6 +117,11 @@ class ProjectController extends Controller
 
     public function addMember(Request $request, Project $project)
     {
+        // Prevent adding members to completed projects
+        if ($project->status === 'completed') {
+            return back()->with('error', 'Cannot add members to a completed project.');
+        }
+        
         $request->validate([
             'user_id' => 'required|exists:users,user_id',
             'role' => 'required|in:admin,leader,member'
@@ -130,6 +159,11 @@ class ProjectController extends Controller
 
     public function removeMember(Project $project, ProjectMember $member)
     {
+        // Prevent removing members from completed projects
+        if ($project->status === 'completed') {
+            return back()->with('error', 'Cannot remove members from a completed project.');
+        }
+        
         if ($member->role === 'admin') {
             return back()->with('error', 'Cannot remove the project administrator.');
         }
@@ -142,5 +176,41 @@ class ProjectController extends Controller
 
         $member->delete();
         return back()->with('success', 'Member removed successfully.');
+    }
+
+    public function completeProject(Project $project)
+    {
+        // Load boards and cards to check completion status
+        $project->load('boards.cards');
+
+        // Check if all cards are completed
+        if (!$project->areAllCardsCompleted()) {
+            return back()->with('error', 'Cannot complete project. Not all cards are completed yet.');
+        }
+
+        // Check if project is already completed
+        if ($project->status === 'completed') {
+            return back()->with('error', 'This project is already completed.');
+        }
+
+        // Complete the project
+        $project->update([
+            'status' => 'completed',
+            'completed_at' => now(),
+            'completed_by' => Auth::id()
+        ]);
+
+        // Set all members back to idle status
+        foreach ($project->members as $member) {
+            $user = \App\Models\User::find($member->user_id);
+            if ($user) {
+                $user->update([
+                    'current_task_status' => 'idle'
+                ]);
+            }
+        }
+
+        return redirect()->route('admin.projects.index')
+            ->with('success', 'Project completed successfully! All team members are now available for new projects.');
     }
 }

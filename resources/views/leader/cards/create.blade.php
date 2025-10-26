@@ -129,32 +129,61 @@
                     @enderror
                 </div>
 
-                <!-- Assign To Member (Single Selection) -->
+                <!-- Assign To Member -->
                 <div class="md:col-span-2">
                     <label class="block text-sm font-medium text-gray-700 mb-3">
-                        <i class="fas fa-user mr-2"></i>Assign To Team Member (Select One)
+                        <i class="fas fa-user mr-2"></i>Assign To Team Member
                     </label>
                     @if($projectMembers->isEmpty())
                         <p class="text-red-500 text-sm">
                             <i class="fas fa-exclamation-circle mr-2"></i>
-                            No available team members. All members in this project are already assigned to other cards.
+                            No available team members in this project.
                         </p>
                     @else
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-3 max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-4 bg-gray-50">
+                            <!-- Option to not assign -->
+                            <label class="flex items-center space-x-3 cursor-pointer hover:bg-white p-3 rounded-lg transition-colors border border-transparent hover:border-gray-200">
+                                <input type="radio" 
+                                       name="assigned_user_id" 
+                                       value=""
+                                       {{ old('assigned_user_id') == '' ? 'checked' : '' }}
+                                       class="text-gray-500 focus:ring-gray-500">
+                                <div class="flex items-center space-x-2">
+                                    <div class="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
+                                        <i class="fas fa-user-slash"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-800">Not Assigned</p>
+                                        <p class="text-xs text-gray-500">Assign later</p>
+                                    </div>
+                                </div>
+                            </label>
+                            
                             @foreach($projectMembers as $member)
-                                <label class="flex items-center space-x-3 cursor-pointer hover:bg-white p-3 rounded-lg transition-colors border border-transparent hover:border-green-200">
+                                @php
+                                    $isAssigned = in_array($member->user_id, $assignedUserIds);
+                                @endphp
+                                <label class="flex items-center space-x-3 p-3 rounded-lg transition-colors border border-transparent {{ $isAssigned ? 'opacity-50 cursor-not-allowed bg-gray-100' : 'cursor-pointer hover:bg-white hover:border-green-200' }}">
                                     <input type="radio" 
                                            name="assigned_user_id" 
                                            value="{{ $member->user_id }}"
                                            {{ old('assigned_user_id') == $member->user_id ? 'checked' : '' }}
-                                           class="text-green-500 focus:ring-green-500">
-                                    <div class="flex items-center space-x-2">
-                                        <div class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-sm">
+                                           {{ $isAssigned ? 'disabled' : '' }}
+                                           class="text-green-500 focus:ring-green-500 {{ $isAssigned ? 'cursor-not-allowed' : '' }}">
+                                    <div class="flex items-center space-x-2 flex-1">
+                                        <div class="h-8 w-8 rounded-full {{ $isAssigned ? 'bg-gray-400' : 'bg-blue-500' }} flex items-center justify-center text-white font-semibold text-sm">
                                             {{ strtoupper(substr($member->user->full_name, 0, 1)) }}
                                         </div>
-                                        <div>
-                                            <p class="text-sm font-medium text-gray-800">{{ $member->user->full_name }}</p>
-                                            <p class="text-xs text-gray-500">{{ $member->user->email }}</p>
+                                        <div class="flex-1">
+                                            <p class="text-sm font-medium {{ $isAssigned ? 'text-gray-500' : 'text-gray-800' }}">
+                                                {{ $member->user->full_name }}
+                                                @if($isAssigned)
+                                                    <span class="ml-2 text-xs text-red-500 font-normal">
+                                                        <i class="fas fa-lock"></i> Already Assigned
+                                                    </span>
+                                                @endif
+                                            </p>
+                                            <p class="text-xs {{ $isAssigned ? 'text-gray-400' : 'text-gray-500' }}">{{ $member->user->email }}</p>
                                         </div>
                                     </div>
                                 </label>
@@ -162,7 +191,7 @@
                         </div>
                         <p class="text-xs text-gray-500 mt-2">
                             <i class="fas fa-info-circle mr-1"></i>
-                            Each member can only be assigned to one card at a time in this project.
+                            The assigned member can create subtasks for this card. Members can only be assigned to one card at a time.
                         </p>
                     @endif
                     @error('assigned_user_id')
