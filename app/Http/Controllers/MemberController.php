@@ -13,20 +13,85 @@ class MemberController extends Controller
     {
         $user = Auth::user();
         
-        // Get all projects where user is a member
+        // Get active projects where user is a member
         $projectIds = ProjectMember::where('user_id', $user->user_id)
+            ->whereHas('project', function($query) {
+                $query->where('status', 'active');
+            })
             ->pluck('project_id');
         
-        $assignedProjects = Project::whereIn('project_id', $projectIds)
+        $activeProjects = Project::whereIn('project_id', $projectIds)
+            ->where('status', 'active')
             ->with(['creator'])
             ->get();
         
-        return view('member.dashboard', compact('assignedProjects'));
+        // Get completed projects history
+        $completedProjectIds = ProjectMember::where('user_id', $user->user_id)
+            ->whereHas('project', function($query) {
+                $query->where('status', 'completed');
+            })
+            ->pluck('project_id');
+        
+        $completedProjects = Project::whereIn('project_id', $completedProjectIds)
+            ->where('status', 'completed')
+            ->with(['creator', 'completedBy'])
+            ->orderBy('completed_at', 'desc')
+            ->take(5)
+            ->get();
+        
+        return view('member.dashboard', compact('activeProjects', 'completedProjects'));
+    }
+
+    public function history()
+    {
+        $userId = Auth::id();
+        
+        // Get completed projects where user was a member
+        $completedProjects = Project::where('status', 'completed')
+            ->whereHas('members', function($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })
+            ->with(['creator', 'completedBy', 'members' => function($query) use ($userId) {
+                $query->where('user_id', $userId);
+            }])
+            ->orderBy('completed_at', 'desc')
+            ->get();
+        
+        // Calculate task statistics
+        $totalTasks = 0;
+        $completedTasks = 0;
+        
+        foreach ($completedProjects as $project) {
+            $userMember = $project->members->first();
+            if ($userMember) {
+                $boards = $project->boards;
+                foreach ($boards as $board) {
+                    $cards = $board->cards;
+                    foreach ($cards as $card) {
+                        $subtasks = $card->subtasks()->where('assigned_user_id', $userId)->get();
+                        $totalTasks += $subtasks->count();
+                        $completedTasks += $subtasks->where('is_complete', true)->count();
+                    }
+                }
+            }
+        }
+        
+        return view('member.history', compact(
+            'completedProjects',
+            'totalTasks',
+            'completedTasks'
+        ));
     }
 
     public function projectDetails(Project $project)
     {
         $user = Auth::user();
+        
+        // Check if project is completed
+        if ($project->status === 'completed') {
+            return redirect()->route('member.dashboard')
+                ->with('error', 'This project has been completed and is now in history.');
+        }
         
         // Check if the user is a member of this project
         $isMember = ProjectMember::where('project_id', $project->project_id)

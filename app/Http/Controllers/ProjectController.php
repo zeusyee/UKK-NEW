@@ -213,4 +213,39 @@ class ProjectController extends Controller
         return redirect()->route('admin.projects.index')
             ->with('success', 'Project completed successfully! All team members are now available for new projects.');
     }
+
+    public function history()
+    {
+        // Get all completed projects
+        $completedProjects = Project::where('status', 'completed')
+            ->with(['creator', 'completedBy', 'members.user'])
+            ->orderBy('completed_at', 'desc')
+            ->get();
+        
+        $totalProjects = Project::count();
+        
+        // Count completed this month
+        $completedThisMonth = Project::where('status', 'completed')
+            ->whereMonth('completed_at', now()->month)
+            ->whereYear('completed_at', now()->year)
+            ->count();
+        
+        // Calculate average duration
+        $averageDuration = 0;
+        if ($completedProjects->count() > 0) {
+            $totalDuration = $completedProjects->sum(function($project) {
+                return $project->created_at && $project->completed_at 
+                    ? $project->created_at->diffInDays($project->completed_at) 
+                    : 0;
+            });
+            $averageDuration = round($totalDuration / $completedProjects->count());
+        }
+        
+        return view('admin.projects.history', compact(
+            'completedProjects',
+            'totalProjects',
+            'completedThisMonth',
+            'averageDuration'
+        ));
+    }
 }

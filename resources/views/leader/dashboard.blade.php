@@ -236,4 +236,110 @@
             </div>
         </div>
     @endif
+
+    <!-- Recent Completed Projects History -->
+    @if(isset($completedProjects) && $completedProjects->count() > 0)
+        <div class="mt-8 bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="bg-gradient-to-r from-purple-500 to-indigo-600 p-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-white flex items-center">
+                        <i class="fas fa-history mr-3"></i>
+                        Riwayat Proyek yang Telah Dikerjakan
+                    </h2>
+                    <span class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                        {{ $completedProjects->count() }} Proyek Selesai
+                    </span>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    @foreach($completedProjects as $project)
+                        <div class="border-l-4 border-green-500 bg-gradient-to-r from-green-50 to-white rounded-r-lg p-5 hover:shadow-md transition-all duration-300">
+                            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <h3 class="text-lg font-bold text-gray-800">{{ $project->project_name }}</h3>
+                                        <span class="px-2.5 py-1 text-xs bg-green-100 text-green-700 rounded-full font-bold">
+                                            <i class="fas fa-check-circle mr-1"></i>SELESAI
+                                        </span>
+                                        @php
+                                            $myRole = $project->members->where('user_id', Auth::id())->first();
+                                        @endphp
+                                        @if($myRole)
+                                            <span class="px-2.5 py-1 text-xs bg-purple-100 text-purple-700 rounded-full font-semibold">
+                                                <i class="fas fa-crown mr-1"></i>{{ ucfirst($myRole->role) }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                    
+                                    @if($project->description)
+                                        <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ $project->description }}</p>
+                                    @endif
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                                        <p class="text-gray-600">
+                                            <i class="fas fa-user text-xs mr-1 text-blue-500"></i>
+                                            <span class="font-medium">Dibuat oleh:</span> {{ $project->creator->full_name }}
+                                        </p>
+                                        <p class="text-gray-600">
+                                            <i class="fas fa-user-check text-xs mr-1 text-green-500"></i>
+                                            <span class="font-medium">Diselesaikan oleh:</span> {{ $project->completedBy ? $project->completedBy->full_name : '-' }}
+                                        </p>
+                                        <p class="text-gray-600">
+                                            <i class="fas fa-calendar-plus text-xs mr-1 text-indigo-500"></i>
+                                            <span class="font-medium">Mulai:</span> {{ $project->created_at->format('d M Y') }}
+                                        </p>
+                                        <p class="text-gray-600">
+                                            <i class="fas fa-calendar-check text-xs mr-1 text-green-500"></i>
+                                            <span class="font-medium">Selesai:</span> {{ $project->completed_at ? $project->completed_at->format('d M Y') : '-' }}
+                                        </p>
+                                    </div>
+                                    
+                                    <div class="mt-3 flex items-center gap-3 flex-wrap">
+                                        <span class="text-xs text-gray-500">
+                                            <i class="fas fa-users mr-1"></i>
+                                            {{ $project->members->count() }} anggota tim
+                                        </span>
+                                        @if($project->completed_at)
+                                            <span class="text-xs text-gray-400">•</span>
+                                            <span class="text-xs text-gray-500">
+                                                <i class="fas fa-clock mr-1"></i>
+                                                Diselesaikan {{ $project->completed_at->diffForHumans() }}
+                                            </span>
+                                        @endif
+                                        @if($project->created_at && $project->completed_at)
+                                            @php
+                                                $duration = $project->created_at->diffInDays($project->completed_at);
+                                            @endphp
+                                            <span class="text-xs text-gray-400">•</span>
+                                            <span class="text-xs text-gray-500">
+                                                <i class="fas fa-hourglass-half mr-1"></i>
+                                                Durasi: {{ $duration }} hari
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center gap-2">
+                                    <span class="bg-green-100 text-green-700 px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+                                        <i class="fas fa-trophy"></i>
+                                        Completed
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+                
+                @if($completedProjects->count() >= 5)
+                    <div class="mt-4 text-center">
+                        <p class="text-sm text-gray-500">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Menampilkan 5 proyek terbaru yang telah diselesaikan
+                        </p>
+                    </div>
+                @endif
+            </div>
+        </div>
+    @endif
 @endsection

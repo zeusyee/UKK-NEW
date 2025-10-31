@@ -13,9 +13,12 @@ class LeaderController extends Controller
     {
         $user = Auth::user();
         
-        // Get projects where user is leader or admin
+        // Get active projects where user is leader or admin
         $leadProjects = ProjectMember::where('user_id', $user->user_id)
             ->whereIn('role', ['admin', 'leader'])
+            ->whereHas('project', function($query) {
+                $query->where('status', 'active');
+            })
             ->with([
                 'project.creator', 
                 'project.members',
@@ -23,6 +26,28 @@ class LeaderController extends Controller
             ])
             ->get()
             ->pluck('project');
+        
+        // Get completed projects history where user was leader or admin
+        $completedProjects = ProjectMember::where('user_id', $user->user_id)
+            ->whereIn('role', ['admin', 'leader'])
+            ->whereHas('project', function($query) {
+                $query->where('status', 'completed');
+            })
+            ->with([
+                'project.creator',
+                'project.completedBy',
+                'project.members'
+            ])
+            ->get()
+            ->pluck('project')
+            ->sortByDesc('completed_at')
+            ->take(5);
+        
+        // If no active projects, redirect to member dashboard
+        if ($leadProjects->isEmpty()) {
+            return redirect()->route('member.dashboard')
+                ->with('info', 'You are not currently assigned as a leader to any active project.');
+        }
         
         // Calculate statistics for each project
         $projectsWithStats = $leadProjects->map(function ($project) {
@@ -109,11 +134,17 @@ class LeaderController extends Controller
             ];
         });
         
-        return view('leader.dashboard', compact('projectsWithStats'));
+        return view('leader.dashboard', compact('projectsWithStats', 'completedProjects'));
     }
 
     public function projectDetails(Project $project)
     {
+        // Check if project is completed
+        if ($project->status === 'completed') {
+            return redirect()->route('leader.dashboard')
+                ->with('error', 'This project has been completed and is now in history. You can no longer access it until you are assigned as a leader to a new active project.');
+        }
+        
         // Check if the authenticated user is a leader/admin of this project
         $member = ProjectMember::where('project_id', $project->project_id)
             ->where('user_id', Auth::id())
@@ -172,7 +203,44 @@ $project->load([
             'subtask_progress' => $totalSubtasks > 0 ? round(($completedSubtasks / $totalSubtasks) * 100) : 0
         ];
 
-        return view('leader.project-details', compact('project', 'projectStats', 'member'));
+        return view('leader.project-details', compact('project', 'boards'));
+    }
+
+    public function history()
+    {
+        $userId = Auth::id();
+        
+        // Get completed projects where user was leader or admin
+        $completedProjects = Project::where('status', 'completed')
+            ->whereHas('members', function($query) use ($userId) {
+                $query->where('user_id', $userId)
+                      ->whereIn('role', ['leader', 'admin']);
+            })
+            ->with(['creator', 'completedBy', 'members'])
+            ->orderBy('completed_at', 'desc')
+            ->get();
+        
+        // Count projects by role - initialize with 0
+        $asLeader = 0;
+        $asAdmin = 0;
+        
+        foreach ($completedProjects as $project) {
+            $userMember = $project->members->firstWhere('user_id', $userId);
+            if ($userMember) {
+                if ($userMember->role === 'leader') {
+                    $asLeader++;
+                }
+                if ($userMember->role === 'admin') {
+                    $asAdmin++;
+                }
+            }
+        }
+        
+        return view('leader.history', compact(
+            'completedProjects',
+            'asLeader',
+            'asAdmin'
+        ));
     }
 
     /**
@@ -180,6 +248,12 @@ $project->load([
      */
     public function monitoring(Project $project)
     {
+        // Check if project is completed
+        if ($project->status === 'completed') {
+            return redirect()->route('leader.dashboard')
+                ->with('error', 'This project has been completed. Monitoring is only available for active projects.');
+        }
+        
         // Check if the authenticated user is a leader/admin of this project
         $member = ProjectMember::where('project_id', $project->project_id)
             ->where('user_id', Auth::id())

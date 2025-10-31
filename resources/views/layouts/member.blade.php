@@ -82,6 +82,11 @@
                             <i class="fas fa-tasks mr-2"></i>
                             My Tasks
                         </a>
+                        <a href="{{ route('member.history') }}" 
+                           class="nav-link inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 {{ request()->routeIs('member.history') ? 'active' : '' }}">
+                            <i class="fas fa-history mr-2"></i>
+                            Riwayat
+                        </a>
                     </div>
                 </div>
 
@@ -142,6 +147,11 @@
                    class="block px-3 py-2 rounded-lg text-base font-medium {{ request()->routeIs('member.my-tasks') ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-100 hover:text-blue-600' }}">
                     <i class="fas fa-tasks mr-2"></i>
                     My Tasks
+                </a>
+                <a href="{{ route('member.history') }}" 
+                   class="block px-3 py-2 rounded-lg text-base font-medium {{ request()->routeIs('member.history') ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-100 hover:text-blue-600' }}">
+                    <i class="fas fa-history mr-2"></i>
+                    Riwayat
                 </a>
             </div>
             

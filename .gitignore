@@ -14,6 +14,7 @@ Homestead.yaml
 auth.json
 npm-debug.log
 yarn-error.log
+GOOGLE_OAUTH_SETUP.md
 /.fleet
 /.idea
 /.vscode

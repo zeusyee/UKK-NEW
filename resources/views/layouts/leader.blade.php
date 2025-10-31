@@ -90,6 +90,12 @@
                                     <span class="ml-2 px-2 py-0.5 text-xs bg-red-500 text-white rounded-full animate-pulse">{{ $reviewCount }}</span>
                         @endif
                 </a>
+                
+                            <a href="{{ route('leader.history') }}" 
+                               class="flex items-center px-4 py-2 rounded-lg transition-colors {{ request()->routeIs('leader.history') ? 'bg-green-100 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-100' }}">
+                                <i class="fas fa-history mr-2"></i>
+                                <span>Riwayat</span>
+                            </a>
             </nav>
 
                         <!-- User Profile & Actions -->
@@ -178,6 +184,12 @@
                                 @if($reviewCount > 0)
                                     <span class="ml-auto px-2 py-0.5 text-xs bg-red-500 text-white rounded-full">{{ $reviewCount }}</span>
                                 @endif
+                            </a>
+
+                            <a href="{{ route('leader.history') }}" 
+                               class="flex items-center px-4 py-2 rounded-lg transition-colors {{ request()->routeIs('leader.history') ? 'bg-green-100 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-100' }}">
+                                <i class="fas fa-history mr-3"></i>
+                                <span>Riwayat</span>
                             </a>
 
                             <div class="border-t border-gray-200 pt-2 mt-2">

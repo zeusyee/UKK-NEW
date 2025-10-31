@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Socialite\Facades\Socialite;
+use Exception;
 
 class AuthController extends Controller
 {
@@ -68,6 +70,84 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/');
+    }
+
+    /**
+     * Redirect user to Google OAuth page
+     */
+    public function redirectToGoogle()
+    {
+        return Socialite::driver('google')->redirect();
+    }
+
+    /**
+     * Handle Google OAuth callback
+     */
+    public function handleGoogleCallback()
+    {
+        try {
+            $googleUser = Socialite::driver('google')->user();
+            
+            // Check if user already exists with this Google ID
+            $user = User::where('google_id', $googleUser->getId())->first();
+            
+            if ($user) {
+                // User exists, log them in
+                Auth::login($user);
+                return $this->redirectBasedOnRole($user);
+            }
+            
+            // Check if user exists with this email
+            $existingUser = User::where('email', $googleUser->getEmail())->first();
+            
+            if ($existingUser) {
+                // Link Google account to existing user
+                $existingUser->update([
+                    'google_id' => $googleUser->getId()
+                ]);
+                
+                Auth::login($existingUser);
+                return $this->redirectBasedOnRole($existingUser);
+            }
+            
+            // Create new user
+            $newUser = User::create([
+                'username' => $this->generateUniqueUsername($googleUser->getName()),
+                'full_name' => $googleUser->getName(),
+                'email' => $googleUser->getEmail(),
+                'google_id' => $googleUser->getId(),
+                'current_task_status' => 'idle',
+                'role' => 'member',
+                'password' => null, // No password for Google users
+            ]);
+            
+            Auth::login($newUser);
+            return $this->redirectBasedOnRole($newUser);
+            
+        } catch (Exception $e) {
+            return redirect()->route('login')->withErrors([
+                'google' => 'Unable to login with Google. Please try again.'
+            ]);
+        }
+    }
+
+    /**
+     * Generate unique username from name
+     */
+    protected function generateUniqueUsername($name)
+    {
+        // Remove spaces and convert to lowercase
+        $baseUsername = strtolower(str_replace(' ', '', $name));
+        $username = $baseUsername;
+        $counter = 1;
+        
+        // Keep trying until we find a unique username
+        while (User::where('username', $username)->exists()) {
+            $username = $baseUsername . $counter;
+            $counter++;
+        }
+        
+        return $username;
     }
 
     protected function redirectBasedOnRole($user)

@@ -143,125 +143,187 @@
                 @if($defaultBoard->cards->isEmpty())
                     <p class="text-gray-400 text-center py-8">No cards in this project yet.</p>
                 @else
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        @foreach($defaultBoard->cards as $card)
-                            @php
-                                $subtasksCount = $card->getSubtasksCountByStatus();
-                                $progressPercentage = $card->getProgressPercentage();
-                                
-                                // Determine card border color based on status
-                                $borderColorClass = 'border-gray-200';
-                                if ($card->status === 'done') {
-                                    $borderColorClass = 'border-green-300';
-                                } elseif ($card->status === 'in_progress') {
-                                    $borderColorClass = 'border-blue-300';
-                                }
-                                
-                                // Check due date status
-                                $dueStatus = '';
-                                $dueBadgeClass = '';
-                                if ($card->due_date) {
-                                    $daysUntil = now()->diffInDays($card->due_date, false);
-                                    if ($daysUntil < 0) {
-                                        $dueStatus = 'Overdue';
-                                        $dueBadgeClass = 'bg-red-100 text-red-800';
-                                    } elseif ($daysUntil <= 3) {
-                                        $dueStatus = 'Due Soon';
-                                        $dueBadgeClass = 'bg-orange-100 text-orange-800';
-                                    }
-                                }
-                            @endphp
-                            <div class="border-2 {{ $borderColorClass }} rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer bg-white"
-                                 onclick="window.location='{{ route('leader.card.show', ['project' => $project, 'board' => $defaultBoard, 'card' => $card]) }}'">
-                                <!-- Card Header -->
-                                <div class="flex justify-between items-start mb-3">
-                                    <h4 class="font-semibold text-gray-800 flex-1">{{ $card->card_title }}</h4>
-                                    <span class="ml-2 px-2 py-1 text-xs rounded-full {{ $card->priority === 'high' ? 'bg-red-100 text-red-800' : ($card->priority === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800') }}">
-                                        <i class="fas fa-flag mr-1"></i>{{ ucfirst($card->priority) }}
-                                    </span>
-                                </div>
+                    <!-- Kanban Board Layout -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        @php
+                            $statusConfig = [
+                                'todo' => [
+                                    'title' => 'To Do',
+                                    'icon' => 'fa-circle',
+                                    'bgColor' => 'bg-gray-100',
+                                    'textColor' => 'text-gray-800',
+                                    'borderColor' => 'border-gray-300',
+                                    'badgeColor' => 'bg-gray-500'
+                                ],
+                                'in_progress' => [
+                                    'title' => 'In Progress',
+                                    'icon' => 'fa-spinner',
+                                    'bgColor' => 'bg-blue-50',
+                                    'textColor' => 'text-blue-800',
+                                    'borderColor' => 'border-blue-300',
+                                    'badgeColor' => 'bg-blue-500'
+                                ],
+                                'review' => [
+                                    'title' => 'Review',
+                                    'icon' => 'fa-eye',
+                                    'bgColor' => 'bg-purple-50',
+                                    'textColor' => 'text-purple-800',
+                                    'borderColor' => 'border-purple-300',
+                                    'badgeColor' => 'bg-purple-500'
+                                ],
+                                'done' => [
+                                    'title' => 'Done',
+                                    'icon' => 'fa-check-circle',
+                                    'bgColor' => 'bg-green-50',
+                                    'textColor' => 'text-green-800',
+                                    'borderColor' => 'border-green-300',
+                                    'badgeColor' => 'bg-green-500'
+                                ]
+                            ];
+                            
+                            // Group cards by status
+                            $cardsByStatus = $defaultBoard->cards->groupBy('status');
+                        @endphp
 
-                                <!-- Card Description -->
-                                @if($card->description)
-                                    <p class="text-sm text-gray-600 mb-3">{{ Str::limit($card->description, 80) }}</p>
-                                @endif
-
-                                <!-- Card Status Badge -->
-                                <div class="mb-3 flex items-center gap-2 flex-wrap">
-                                    <span class="px-2.5 py-1.5 text-xs font-semibold rounded-lg {{ $card->status === 'done' ? 'bg-green-100 text-green-800' : ($card->status === 'in_progress' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800') }}">
-                                        @if($card->status === 'done')
-                                            <i class="fas fa-check-circle mr-1"></i>Done
-                                        @elseif($card->status === 'in_progress')
-                                            <i class="fas fa-spinner mr-1"></i>In Progress
-                                        @else
-                                            <i class="fas fa-circle mr-1"></i>To Do
-                                        @endif
-                                    </span>
-                                    
-                                    @if($dueStatus)
-                                        <span class="px-2 py-1 text-xs font-semibold rounded-lg {{ $dueBadgeClass }}">
-                                            <i class="fas fa-exclamation-triangle mr-1"></i>{{ $dueStatus }}
+                        @foreach($statusConfig as $status => $config)
+                            <!-- Column for {{ $config['title'] }} -->
+                            <div class="flex flex-col">
+                                <!-- Column Header -->
+                                <div class="rounded-t-xl {{ $config['bgColor'] }} {{ $config['borderColor'] }} border-2 border-b-0 p-4 mb-0">
+                                    <div class="flex items-center justify-between">
+                                        <h3 class="font-bold {{ $config['textColor'] }} flex items-center">
+                                            <i class="fas {{ $config['icon'] }} mr-2"></i>
+                                            {{ $config['title'] }}
+                                        </h3>
+                                        <span class="{{ $config['badgeColor'] }} text-white rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold">
+                                            {{ $cardsByStatus->get($status, collect())->count() }}
                                         </span>
-                                    @endif
+                                    </div>
                                 </div>
-                                
-                                <!-- Subtasks Status Breakdown -->
-                                @if($card->subtasks->count() > 0)
-                                    <div class="mb-3 bg-gray-50 rounded-lg p-3">
-                                        <div class="flex justify-between items-center mb-2">
-                                            <span class="text-xs font-semibold text-gray-600">Subtasks Status</span>
-                                            <span class="text-xs font-bold {{ $progressPercentage == 100 ? 'text-green-600' : 'text-blue-600' }}">{{ $progressPercentage }}%</span>
-                                        </div>
-                                        <div class="grid grid-cols-4 gap-1 mb-2">
-                                            <div class="text-center">
-                                                <div class="text-xs font-bold text-gray-700">{{ $subtasksCount['todo'] }}</div>
-                                                <div class="text-xs text-gray-500">Todo</div>
-                                            </div>
-                                            <div class="text-center">
-                                                <div class="text-xs font-bold text-blue-700">{{ $subtasksCount['in_progress'] }}</div>
-                                                <div class="text-xs text-gray-500">Progress</div>
-                                            </div>
-                                            <div class="text-center">
-                                                <div class="text-xs font-bold text-purple-700">{{ $subtasksCount['review'] }}</div>
-                                                <div class="text-xs text-gray-500">Review</div>
-                                            </div>
-                                            <div class="text-center">
-                                                <div class="text-xs font-bold text-green-700">{{ $subtasksCount['done'] }}</div>
-                                                <div class="text-xs text-gray-500">Done</div>
-                                            </div>
-                                        </div>
-                                        <div class="w-full bg-gray-200 rounded-full h-2">
-                                            <div class="h-2 rounded-full {{ $progressPercentage == 100 ? 'bg-green-500' : ($progressPercentage >= 50 ? 'bg-blue-500' : 'bg-yellow-500') }}" 
-                                                 style="width: {{ $progressPercentage }}%"></div>
-                                        </div>
-                                    </div>
-                                @else
-                                    <div class="mb-3 bg-gray-50 rounded-lg p-2 text-center">
-                                        <span class="text-xs text-gray-500"><i class="fas fa-info-circle mr-1"></i>No subtasks yet</span>
-                                    </div>
-                                @endif
 
-                                <!-- Card Footer -->
-                                <div class="flex justify-between items-center text-xs text-gray-500 pt-3 border-t border-gray-200">
-                                    <div>
-                                        @if($card->due_date)
-                                            <i class="fas fa-calendar-alt mr-1"></i>
-                                            {{ $card->due_date->format('M d') }}
-                                        @endif
-                                    </div>
-                                    <div class="flex items-center">
-                                        @if($card->assignedUser)
-                                            <div class="flex items-center space-x-1">
-                                                <div class="h-6 w-6 rounded-full bg-blue-500 border-2 border-white flex items-center justify-center text-white text-xs font-semibold"
-                                                     title="{{ $card->assignedUser->full_name }}">
-                                                    {{ strtoupper(substr($card->assignedUser->full_name, 0, 1)) }}
+                                <!-- Cards Container -->
+                                <div class="flex-1 rounded-b-xl {{ $config['borderColor'] }} border-2 border-t-0 p-4 bg-white min-h-[200px] space-y-3 overflow-y-auto max-h-[600px]">
+                                    @forelse($cardsByStatus->get($status, collect()) as $card)
+                                        @php
+                                            $subtasksCount = $card->getSubtasksCountByStatus();
+                                            $progressPercentage = $card->getProgressPercentage();
+                                            
+                                            // Check due date status
+                                            $dueStatus = '';
+                                            $dueBadgeClass = '';
+                                            if ($card->due_date) {
+                                                $daysUntil = now()->diffInDays($card->due_date, false);
+                                                if ($daysUntil < 0) {
+                                                    $dueStatus = 'Overdue';
+                                                    $dueBadgeClass = 'bg-red-100 text-red-800';
+                                                } elseif ($daysUntil <= 3) {
+                                                    $dueStatus = 'Due Soon';
+                                                    $dueBadgeClass = 'bg-orange-100 text-orange-800';
+                                                }
+                                            }
+                                        @endphp
+                                        
+                                        <!-- Card -->
+                                        <div class="bg-white border-2 {{ $config['borderColor'] }} rounded-xl p-4 hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
+                                             onclick="window.location='{{ route('leader.card.show', ['project' => $project, 'board' => $defaultBoard, 'card' => $card]) }}'">
+                                            <!-- Card Header -->
+                                            <div class="mb-3">
+                                                <div class="flex justify-between items-start mb-2">
+                                                    <h4 class="font-bold text-gray-800 text-sm flex-1 line-clamp-2">{{ $card->card_title }}</h4>
                                                 </div>
-                                                <span class="text-xs text-gray-600 ml-1">{{ Str::limit($card->assignedUser->full_name, 15) }}</span>
+                                                <span class="inline-block px-2 py-1 text-xs rounded-full font-semibold {{ $card->priority === 'high' ? 'bg-red-100 text-red-800' : ($card->priority === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800') }}">
+                                                    <i class="fas fa-flag mr-1"></i>{{ ucfirst($card->priority) }}
+                                                </span>
                                             </div>
-                                        @else
-                                            <span class="text-xs text-gray-400"><i class="fas fa-user-slash mr-1"></i>Not assigned</span>
-                                        @endif
-                                    </div>
+
+                                            <!-- Card Description -->
+                                            @if($card->description)
+                                                <p class="text-xs text-gray-600 mb-3 line-clamp-2">{{ Str::limit($card->description, 60) }}</p>
+                                            @endif
+
+                                            <!-- Due Date Badge -->
+                                            @if($dueStatus)
+                                                <div class="mb-3">
+                                                    <span class="px-2 py-1 text-xs font-semibold rounded-lg {{ $dueBadgeClass }}">
+                                                        <i class="fas fa-exclamation-triangle mr-1"></i>{{ $dueStatus }}
+                                                    </span>
+                                                </div>
+                                            @endif
+                                            
+                                            <!-- Subtasks Progress -->
+                                            @if($card->subtasks->count() > 0)
+                                                <div class="mb-3 bg-gray-50 rounded-lg p-2.5">
+                                                    <div class="flex justify-between items-center mb-2">
+                                                        <span class="text-xs font-semibold text-gray-600">
+                                                            <i class="fas fa-tasks mr-1"></i>Subtasks
+                                                        </span>
+                                                        <span class="text-xs font-bold {{ $progressPercentage == 100 ? 'text-green-600' : 'text-blue-600' }}">
+                                                            {{ $subtasksCount['done'] }}/{{ $card->subtasks->count() }}
+                                                        </span>
+                                                    </div>
+                                                    <div class="w-full bg-gray-200 rounded-full h-1.5 mb-2">
+                                                        <div class="h-1.5 rounded-full {{ $progressPercentage == 100 ? 'bg-green-500' : ($progressPercentage >= 50 ? 'bg-blue-500' : 'bg-yellow-500') }}" 
+                                                             style="width: {{ $progressPercentage }}%"></div>
+                                                    </div>
+                                                    <div class="grid grid-cols-4 gap-1 text-center">
+                                                        <div>
+                                                            <div class="text-xs font-bold text-gray-600">{{ $subtasksCount['todo'] }}</div>
+                                                            <div class="text-xs text-gray-400">To Do</div>
+                                                        </div>
+                                                        <div>
+                                                            <div class="text-xs font-bold text-blue-600">{{ $subtasksCount['in_progress'] }}</div>
+                                                            <div class="text-xs text-gray-400">Progress</div>
+                                                        </div>
+                                                        <div>
+                                                            <div class="text-xs font-bold text-purple-600">{{ $subtasksCount['review'] }}</div>
+                                                            <div class="text-xs text-gray-400">Review</div>
+                                                        </div>
+                                                        <div>
+                                                            <div class="text-xs font-bold text-green-600">{{ $subtasksCount['done'] }}</div>
+                                                            <div class="text-xs text-gray-400">Done</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @else
+                                                <div class="mb-3 bg-gray-50 rounded-lg p-2 text-center">
+                                                    <span class="text-xs text-gray-400">
+                                                        <i class="fas fa-info-circle mr-1"></i>No subtasks
+                                                    </span>
+                                                </div>
+                                            @endif
+
+                                            <!-- Card Footer -->
+                                            <div class="flex justify-between items-center text-xs text-gray-500 pt-3 border-t border-gray-100">
+                                                <div>
+                                                    @if($card->due_date)
+                                                        <i class="fas fa-calendar-alt mr-1"></i>
+                                                        {{ $card->due_date->format('M d') }}
+                                                    @else
+                                                        <span class="text-gray-400">No deadline</span>
+                                                    @endif
+                                                </div>
+                                                <div>
+                                                    @if($card->assignedUser)
+                                                        <div class="flex items-center">
+                                                            <div class="h-6 w-6 rounded-full {{ $config['badgeColor'] }} border-2 border-white flex items-center justify-center text-white text-xs font-bold shadow-sm"
+                                                                 title="{{ $card->assignedUser->full_name }}">
+                                                                {{ strtoupper(substr($card->assignedUser->full_name, 0, 1)) }}
+                                                            </div>
+                                                        </div>
+                                                    @else
+                                                        <span class="text-gray-400">
+                                                            <i class="fas fa-user-slash"></i>
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @empty
+                                        <div class="flex flex-col items-center justify-center py-8 text-gray-400">
+                                            <i class="fas fa-inbox text-3xl mb-2 opacity-50"></i>
+                                            <p class="text-xs">No cards</p>
+                                        </div>
+                                    @endforelse
                                 </div>
                             </div>
                         @endforeach

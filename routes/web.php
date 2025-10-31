@@ -20,6 +20,10 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register']);
+    
+    // Google OAuth Routes
+    Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
+    Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 });
 
 Route::middleware('auth')->group(function () {
@@ -28,7 +32,14 @@ Route::middleware('auth')->group(function () {
     // Admin routes
     Route::middleware(['auth', \App\Http\Middleware\AdminMiddleware::class])->group(function () {
         Route::get('/admin/dashboard', function () {
-            return view('admin.dashboard');
+            // Get completed projects for recent history
+            $recentCompletedProjects = \App\Models\Project::where('status', 'completed')
+                ->with(['creator', 'completedBy', 'members'])
+                ->orderBy('completed_at', 'desc')
+                ->take(5)
+                ->get();
+            
+            return view('admin.dashboard', compact('recentCompletedProjects'));
         })->name('admin.dashboard');
 
         // Project routes
@@ -53,6 +64,10 @@ Route::middleware('auth')->group(function () {
         // Complete project route
         Route::post('admin/projects/{project}/complete', [ProjectController::class, 'completeProject'])
             ->name('admin.projects.complete');
+        
+        // Project history route
+        Route::get('admin/projects/history/completed', [ProjectController::class, 'history'])
+            ->name('admin.projects.history');
 
         // User management routes
         Route::resource('admin/users', UserController::class)->names([
@@ -75,6 +90,7 @@ Route::middleware('auth')->group(function () {
     // Leader routes (for users with 'leader' or 'admin' role in a project)
     Route::prefix('leader')->name('leader.')->group(function () {
         Route::get('/dashboard', [LeaderController::class, 'dashboard'])->name('dashboard');
+        Route::get('/history', [LeaderController::class, 'history'])->name('history');
         Route::get('/projects/{project}', [LeaderController::class, 'projectDetails'])->name('project.details');
         Route::get('/projects/{project}/monitoring', [LeaderController::class, 'monitoring'])->name('project.monitoring');
         
@@ -99,6 +115,7 @@ Route::middleware('auth')->group(function () {
     // Member routes (regular members, not leaders)
     Route::middleware(['auth', \App\Http\Middleware\MemberMiddleware::class])->group(function () {
         Route::get('/dashboard', [MemberController::class, 'dashboard'])->name('member.dashboard');
+        Route::get('/history', [MemberController::class, 'history'])->name('member.history');
         Route::get('/projects/{project}', [MemberController::class, 'projectDetails'])->name('member.project.details');
         
         // Member task routes
