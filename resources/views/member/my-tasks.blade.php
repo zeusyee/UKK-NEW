@@ -139,7 +139,16 @@
                                         {{ ucfirst($card->priority) }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-y-1">
+                                    @php
+                                        $rejectedSubtasks = $card->subtasks->where('status', 'todo')->where('review_notes', '!=', null)->count();
+                                    @endphp
+                                    @if($rejectedSubtasks > 0)
+                                        <div class="px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full font-semibold inline-block" title="Has rejected subtasks">
+                                            <i class="fas fa-times-circle mr-1"></i>{{ $rejectedSubtasks }} Rejected
+                                        </div>
+                                        <br>
+                                    @endif
                                     <a href="{{ route('member.task.show', ['project' => $card->board->project->project_id, 'board' => $card->board->board_id, 'card' => $card->card_id]) }}" 
                                        class="text-blue-600 hover:text-blue-900">
                                         <i class="fas fa-eye mr-1"></i>View

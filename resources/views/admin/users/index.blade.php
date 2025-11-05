@@ -7,7 +7,7 @@
         <div class="p-6 border-b border-gray-200">
             <div class="flex justify-between items-center">
                 <h2 class="text-2xl font-bold text-gray-800">Users</h2>
-                <a href="{{ route('admin.users.create') }}" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">
+                <a href="{{ route('admin.users.create') }}" class="bg-primary text-white font-semibold py-2 px-4 rounded">
                     <i class="fas fa-plus mr-2"></i>Add User
                 </a>
             </div>
@@ -32,24 +32,24 @@
                                 <td class="px-6 py-4 whitespace-nowrap">{{ $user->username }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">{{ $user->email }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $user->role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800' }}">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full panel-bg" style="border:1px solid rgba(30,64,175,0.08); color:var(--primary)">
                                         {{ ucfirst($user->role) }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $user->current_task_status === 'working' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800' }}">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full panel-bg" style="border:1px solid rgba(30,64,175,0.04); color:var(--primary)">
                                         {{ ucfirst($user->current_task_status) }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     @if($user->user_id !== auth()->id())
-                                        <a href="{{ route('admin.users.edit', $user) }}" class="text-blue-600 hover:text-blue-900 mr-3">
+                                        <a href="{{ route('admin.users.edit', $user) }}" class="text-primary hover:opacity-80 mr-3">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="inline">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Are you sure you want to delete this user?')">
+                                            <button type="submit" class="text-primary hover:opacity-80" onclick="return confirm('Are you sure you want to delete this user?')">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </form>

@@ -308,6 +308,12 @@
                                     </span>
                                     <h4 class="font-semibold text-gray-800">{{ $subtask->subtask_title }}</h4>
                                     
+                                    @if($subtask->status === 'todo' && $subtask->review_notes)
+                                        <span class="px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full font-semibold" title="{{ $subtask->review_notes }}">
+                                            <i class="fas fa-times-circle mr-1"></i>REJECTED
+                                        </span>
+                                    @endif
+                                    
                                     @if($subtask->status === 'in_progress' && $subtask->paused_at)
                                         <span class="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full font-semibold">
                                             <i class="fas fa-pause mr-1"></i>PAUSED
@@ -372,6 +378,11 @@
                                                ($subtask->status === 'review' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800')) }}">
                                             {{ $subtask->status === 'review' ? 'In Review' : ucfirst(str_replace('_', ' ', $subtask->status)) }}
                                         </span>
+                                        @if($subtask->status === 'todo' && $subtask->review_notes)
+                                            <span class="px-3 py-1 text-sm bg-red-100 text-red-800 rounded-full font-semibold" title="{{ $subtask->review_notes }}">
+                                                <i class="fas fa-times-circle mr-1"></i>REJECTED
+                                            </span>
+                                        @endif
                                         @if($subtask->status === 'in_progress' && $subtask->paused_at)
                                             <span class="px-3 py-1 text-sm bg-yellow-100 text-yellow-800 rounded-full font-semibold">
                                                 <i class="fas fa-pause mr-1"></i>PAUSED

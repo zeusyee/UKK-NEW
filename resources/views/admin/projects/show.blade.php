@@ -4,12 +4,12 @@
 
 @section('content')
         @if(session('success'))
-        <div class="alert-notification bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 flex items-center justify-between" role="alert">
+        <div class="alert-notification panel-bg rounded relative mb-4 flex items-center justify-between px-4 py-3" role="alert" style="border-left:4px solid var(--primary);">
             <div class="flex items-center">
-                <i class="fas fa-check-circle mr-2"></i>
+                <i class="fas fa-check-circle mr-2 text-primary"></i>
                 <span class="block sm:inline">{{ session('success') }}</span>
             </div>
-            <button onclick="this.parentElement.remove()" class="text-green-700 hover:text-green-900">
+            <button onclick="this.parentElement.remove()" class="text-primary hover:opacity-80">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -28,11 +28,11 @@
                     </div>
                     <div>
                         @if($project->status === 'completed')
-                            <span class="px-4 py-2 inline-flex text-sm leading-5 font-semibold rounded-lg bg-green-100 text-green-800 border-2 border-green-200">
+                            <span class="px-4 py-2 inline-flex text-sm leading-5 font-semibold rounded-lg panel-bg" style="border:1px solid rgba(30,64,175,0.08); color:var(--primary)">
                                 <i class="fas fa-check-circle mr-2"></i> Completed
                             </span>
                         @else
-                            <span class="px-4 py-2 inline-flex text-sm leading-5 font-semibold rounded-lg bg-blue-100 text-blue-800 border-2 border-blue-200">
+                            <span class="px-4 py-2 inline-flex text-sm leading-5 font-semibold rounded-lg panel-bg" style="border:1px solid rgba(30,64,175,0.04); color:var(--primary)">
                                 <i class="fas fa-play-circle mr-2"></i> Active
                             </span>
                         @endif
@@ -53,8 +53,8 @@
                             @if($project->status === 'completed')
                                 <div class="space-y-1">
                                     <div class="flex items-center">
-                                        <i class="fas fa-check-double text-green-500 mr-2"></i>
-                                        <span class="font-semibold text-green-700">Project Completed</span>
+                                        <i class="fas fa-check-double text-primary mr-2"></i>
+                                        <span class="font-semibold text-primary">Project Completed</span>
                                     </div>
                                     @if($project->completed_at)
                                         <div class="text-sm text-gray-600">
@@ -71,8 +71,8 @@
                                 </div>
                             @else
                                 <div class="flex items-center">
-                                    <i class="fas fa-play-circle text-blue-500 mr-2"></i>
-                                    <span class="font-semibold text-blue-700">Active Project</span>
+                                    <i class="fas fa-play-circle text-primary mr-2"></i>
+                                    <span class="font-semibold text-primary">Active Project</span>
                                 </div>
                             @endif
                         </dd>
@@ -87,19 +87,19 @@
                                         $daysUntil = (int) floor(now()->diffInDays($project->deadline, false));
                                     @endphp
                                     @if($daysUntil < 0)
-                                        <span class="ml-2 px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                        <span class="ml-2 px-2 py-1 text-xs font-semibold rounded-full panel-bg" style="border:1px solid rgba(30,64,175,0.06); color:var(--primary)">
                                             <i class="fas fa-exclamation-circle mr-1"></i>{{ abs($daysUntil) }} hari terlambat
                                         </span>
                                     @elseif($daysUntil == 0)
-                                        <span class="ml-2 px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">
+                                        <span class="ml-2 px-2 py-1 text-xs font-semibold rounded-full panel-bg" style="border:1px solid rgba(30,64,175,0.06); color:var(--primary)">
                                             <i class="fas fa-clock mr-1"></i>Hari ini!
                                         </span>
                                     @elseif($daysUntil <= 7)
-                                        <span class="ml-2 px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                        <span class="ml-2 px-2 py-1 text-xs font-semibold rounded-full panel-bg" style="border:1px solid rgba(30,64,175,0.04); color:var(--primary)">
                                             <i class="fas fa-hourglass-half mr-1"></i>{{ $daysUntil }} hari tersisa
                                         </span>
                                     @else
-                                        <span class="ml-2 px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                        <span class="ml-2 px-2 py-1 text-xs font-semibold rounded-full panel-bg" style="border:1px solid rgba(30,64,175,0.04); color:var(--primary)">
                                             <i class="fas fa-check-circle mr-1"></i>{{ $daysUntil }} hari tersisa
                                         </span>
                                     @endif
@@ -133,7 +133,7 @@
                 </div>
                 @if($project->status === 'active')
                     <a href="{{ route('admin.projects.members', $project) }}" 
-                       class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors">
+                       class="bg-primary text-white font-bold py-2 px-4 rounded">
                         <i class="fas fa-users-cog mr-2"></i>Manage Members
                     </a>
                 @else

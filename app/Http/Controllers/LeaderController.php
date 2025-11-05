@@ -203,7 +203,7 @@ $project->load([
             'subtask_progress' => $totalSubtasks > 0 ? round(($completedSubtasks / $totalSubtasks) * 100) : 0
         ];
 
-        return view('leader.project-details', compact('project', 'boards'));
+        return view('leader.project-details', compact('project', 'projectStats', 'member'));
     }
 
     public function history()

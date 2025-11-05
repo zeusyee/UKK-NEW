@@ -305,13 +305,17 @@ class SubtaskController extends Controller
 
         DB::beginTransaction();
         try {
-            // Update subtask status back to in_progress
+            // Update subtask status back to todo and reset timing fields
             $subtask->update([
-                'status' => 'in_progress',
+                'status' => 'todo',
                 'reviewed_by' => Auth::id(),
                 'reviewed_at' => now(),
                 'review_notes' => $request->rejection_reason,
-                'completed_at' => null
+                'started_at' => null,
+                'paused_at' => null,
+                'total_paused_seconds' => 0,
+                'completed_at' => null,
+                'assigned_user_id' => null
             ]);
 
             // Update card status based on subtasks

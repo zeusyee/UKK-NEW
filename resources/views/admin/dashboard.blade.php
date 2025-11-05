@@ -9,59 +9,59 @@
         <p class="text-gray-600 mt-2">Selamat datang di panel administrator</p>
     </div>
 
-    <!-- Statistics Cards -->
+    <!-- Statistics Cards (single-color) -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- Total Users Card -->
-        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white transform transition-all duration-300 hover:scale-105 hover:shadow-xl">
+        <div class="panel-bg rounded-xl p-6" style="border-left:4px solid var(--primary);">
             <div class="flex items-center justify-between">
                 <div class="flex-1">
-                    <p class="text-blue-100 text-sm font-medium mb-1">Total Pengguna</p>
-                    <p class="text-4xl font-bold mb-2">{{ \App\Models\User::count() }}</p>
-                    <p class="text-blue-100 text-xs">Terdaftar di sistem</p>
+                    <p class="text-sm font-medium mb-1 text-primary">Total Pengguna</p>
+                    <p class="text-4xl font-bold mb-2 text-primary">{{ \App\Models\User::count() }}</p>
+                    <p class="text-xs" style="color: rgba(0,0,0,0.6)">Terdaftar di sistem</p>
                 </div>
-                <div class="bg-white bg-opacity-20 p-4 rounded-lg">
+                <div class="p-4 rounded-lg" style="background:var(--primary); color:white">
                     <i class="fas fa-users text-3xl"></i>
                 </div>
             </div>
         </div>
 
         <!-- Total Projects Card -->
-        <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white transform transition-all duration-300 hover:scale-105 hover:shadow-xl">
+        <div class="panel-bg rounded-xl p-6" style="border-left:4px solid var(--primary);">
             <div class="flex items-center justify-between">
                 <div class="flex-1">
-                    <p class="text-green-100 text-sm font-medium mb-1">Total Proyek</p>
-                    <p class="text-4xl font-bold mb-2">{{ \App\Models\Project::count() }}</p>
-                    <p class="text-green-100 text-xs">Proyek aktif</p>
+                    <p class="text-sm font-medium mb-1 text-primary">Total Proyek</p>
+                    <p class="text-4xl font-bold mb-2 text-primary">{{ \App\Models\Project::count() }}</p>
+                    <p class="text-xs" style="color: rgba(0,0,0,0.6)">Proyek aktif</p>
                 </div>
-                <div class="bg-white bg-opacity-20 p-4 rounded-lg">
+                <div class="p-4 rounded-lg" style="background:var(--primary); color:white">
                     <i class="fas fa-project-diagram text-3xl"></i>
                 </div>
             </div>
         </div>
 
         <!-- Working Users Card -->
-        <div class="bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl shadow-lg p-6 text-white transform transition-all duration-300 hover:scale-105 hover:shadow-xl">
+        <div class="panel-bg rounded-xl p-6" style="border-left:4px solid var(--primary);">
             <div class="flex items-center justify-between">
                 <div class="flex-1">
-                    <p class="text-yellow-100 text-sm font-medium mb-1">Sedang Bekerja</p>
-                    <p class="text-4xl font-bold mb-2">{{ \App\Models\User::where('current_task_status', 'working')->count() }}</p>
-                    <p class="text-yellow-100 text-xs">Pengguna aktif</p>
+                    <p class="text-sm font-medium mb-1 text-primary">Sedang Bekerja</p>
+                    <p class="text-4xl font-bold mb-2 text-primary">{{ \App\Models\User::where('current_task_status', 'working')->count() }}</p>
+                    <p class="text-xs" style="color: rgba(0,0,0,0.6)">Pengguna aktif</p>
                 </div>
-                <div class="bg-white bg-opacity-20 p-4 rounded-lg">
+                <div class="p-4 rounded-lg" style="background:var(--primary); color:white">
                     <i class="fas fa-user-clock text-3xl"></i>
                 </div>
             </div>
         </div>
 
         <!-- Idle Users Card -->
-        <div class="bg-gradient-to-br from-gray-500 to-gray-600 rounded-xl shadow-lg p-6 text-white transform transition-all duration-300 hover:scale-105 hover:shadow-xl">
+        <div class="panel-bg rounded-xl p-6" style="border-left:4px solid var(--primary);">
             <div class="flex items-center justify-between">
                 <div class="flex-1">
-                    <p class="text-gray-100 text-sm font-medium mb-1">Tidak Aktif</p>
-                    <p class="text-4xl font-bold mb-2">{{ \App\Models\User::where('current_task_status', 'idle')->count() }}</p>
-                    <p class="text-gray-100 text-xs">Pengguna idle</p>
+                    <p class="text-sm font-medium mb-1 text-primary">Tidak Aktif</p>
+                    <p class="text-4xl font-bold mb-2 text-primary">{{ \App\Models\User::where('current_task_status', 'idle')->count() }}</p>
+                    <p class="text-xs" style="color: rgba(0,0,0,0.6)">Pengguna idle</p>
                 </div>
-                <div class="bg-white bg-opacity-20 p-4 rounded-lg">
+                <div class="p-4 rounded-lg" style="background:var(--primary); color:white">
                     <i class="fas fa-user-slash text-3xl"></i>
                 </div>
             </div>
@@ -72,13 +72,13 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <!-- Recent Projects -->
         <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-            <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-6">
+            <div class="p-6" style="background:var(--primary); color:white">
                 <div class="flex justify-between items-center">
                     <h2 class="text-xl font-bold text-white flex items-center">
                         <i class="fas fa-folder-open mr-3"></i>
                         Proyek Terbaru
                     </h2>
-                    <a href="{{ route('admin.projects.index') }}" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300">
+                    <a href="{{ route('admin.projects.index') }}" class="text-white px-4 py-2 rounded-lg text-sm font-medium" style="background: rgba(255,255,255,0.08)">
                         Lihat Semua
                     </a>
                 </div>
@@ -87,33 +87,33 @@
                 @if(\App\Models\Project::count() > 0)
                     <div class="space-y-4">
                         @foreach(\App\Models\Project::with(['creator', 'members'])->latest()->take(5)->get() as $project)
-                            <div class="border-l-4 border-blue-500 bg-gray-50 rounded-r-lg p-4 hover:bg-gray-100 transition-all duration-300">
+                            <div class="border-l-4 bg-gray-50 rounded-r-lg p-4 hover:bg-gray-100 transition-all duration-300" style="border-color:var(--primary)">
                                 <div class="flex justify-between items-start">
                                     <div class="flex-1">
                                         <div class="flex items-center gap-2 mb-1">
-                                            <a href="{{ route('admin.projects.show', $project) }}" class="text-lg font-semibold text-gray-800 hover:text-blue-600 transition-colors duration-300">
+                                            <a href="{{ route('admin.projects.show', $project) }}" class="text-lg font-semibold text-gray-800 text-primary-hover">
                                                 {{ $project->project_name }}
                                             </a>
                                             @if($project->status === 'completed')
-                                                <span class="px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded-full font-semibold">
+                                                <span class="px-2 py-0.5 text-xs panel-bg rounded-full font-semibold" style="border:1px solid rgba(30,64,175,0.06); color:var(--primary)">
                                                     <i class="fas fa-check-circle mr-1"></i>Selesai
                                                 </span>
                                             @else
-                                                <span class="px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full font-semibold">
+                                                <span class="px-2 py-0.5 text-xs panel-bg rounded-full font-semibold" style="border:1px solid rgba(30,64,175,0.04); color:var(--primary)">
                                                     <i class="fas fa-spinner mr-1"></i>Aktif
                                                 </span>
                                             @endif
                                         </div>
                                         <p class="text-sm text-gray-500 mt-1">
-                                            <i class="fas fa-user text-xs mr-1"></i>
+                                            <i class="fas fa-user text-xs mr-1 text-primary"></i>
                                             Dibuat oleh {{ $project->creator->full_name }}
                                         </p>
                                         <p class="text-xs text-gray-400 mt-1">
-                                            <i class="fas fa-clock text-xs mr-1"></i>
+                                            <i class="fas fa-clock text-xs mr-1 text-primary"></i>
                                             {{ $project->created_at->diffForHumans() }}
                                         </p>
                                     </div>
-                                    <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium ml-4">
+                                    <span class="panel-bg px-3 py-1 rounded-full text-sm font-medium ml-4" style="border:1px solid rgba(30,64,175,0.04); color:var(--primary)">
                                         <i class="fas fa-users text-xs mr-1"></i>
                                         {{ $project->members->count() }}
                                     </span>

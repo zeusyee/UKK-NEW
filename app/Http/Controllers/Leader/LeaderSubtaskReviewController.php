@@ -118,10 +118,15 @@ class LeaderSubtaskReviewController extends Controller
         DB::beginTransaction();
         try {
             $subtask->update([
-                'status' => 'in_progress',
+                'status' => 'todo',
                 'reviewed_by' => Auth::id(),
                 'reviewed_at' => now(),
-                'review_notes' => $request->rejection_reason
+                'review_notes' => $request->rejection_reason,
+                'started_at' => null,
+                'paused_at' => null,
+                'total_paused_seconds' => 0,
+                'completed_at' => null,
+                'assigned_user_id' => null
             ]);
 
             DB::commit();

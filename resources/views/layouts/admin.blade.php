@@ -7,8 +7,16 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        :root {
+            --primary: #1e40af; /* blue-800 */
+            --primary-dark: #1e3a8a; /* blue-900 */
+            --muted-bg: #f8fafc; /* gray-50 */
+            --panel-bg: #ffffff; /* white panels */
+        }
+
+        /* minimal transitions */
         .sidebar {
-            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: width 0.25s ease, transform 0.25s ease;
             overflow: hidden;
         }
         .sidebar-minimized {
@@ -38,7 +46,7 @@
         }
         .logo-minimized {
             display: none;
-            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+            transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
         }
         .sidebar-minimized .logo-minimized {
             display: flex;
@@ -68,7 +76,7 @@
             justify-content: center !important;
         }
         
-        /* Menu item animation */
+        /* Menu item subtle accent using primary color */
         .menu-item {
             position: relative;
             overflow: hidden;
@@ -80,9 +88,9 @@
             top: 0;
             height: 100%;
             width: 4px;
-            background: linear-gradient(to bottom, #818cf8, #6366f1);
+            background: var(--primary);
             transform: scaleY(0);
-            transition: transform 0.3s ease;
+            transition: transform 0.18s ease;
         }
         .menu-item.active::before,
         .menu-item:hover::before {
@@ -103,18 +111,26 @@
         .badge-pulse {
             animation: badge-pulse 2s ease-in-out infinite;
         }
+
+        /* helper classes to use single color palette */
+        .bg-primary { background-color: var(--primary) !important; }
+        .bg-primary-dark { background-color: var(--primary-dark) !important; }
+        .text-primary { color: var(--primary) !important; }
+        .muted-bg { background-color: var(--muted-bg) !important; }
+        .panel-bg { background-color: var(--panel-bg) !important; }
+        .no-fancy-shadow { box-shadow: none !important; }
     </style>
 </head>
 <body class="bg-gray-50">
     <div class="min-h-screen flex">
         <!-- Sidebar -->
-        <aside id="sidebar" class="sidebar sidebar-expanded bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-800 text-white fixed inset-y-0 left-0 z-50 shadow-2xl transform -translate-x-full md:translate-x-0 flex flex-col">
+    <aside id="sidebar" class="sidebar sidebar-expanded text-white fixed inset-y-0 left-0 z-50 transform -translate-x-full md:translate-x-0 flex flex-col bg-primary">
             <!-- Sidebar Header - Fixed -->
             <div class="flex-shrink-0 p-5 border-b border-white border-opacity-20">
                 <!-- Expanded Logo -->
                 <div class="logo-expanded flex items-center justify-between">
                     <div class="flex items-center space-x-3 overflow-hidden">
-                        <div class="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl p-2.5 flex-shrink-0 shadow-lg">
+                        <div style="background:transparent" class="rounded-xl p-2.5 flex-shrink-0">
                             <i class="fas fa-shield-alt text-2xl"></i>
                         </div>
                         <div class="menu-text">
@@ -122,7 +138,7 @@
                             <span class="text-xs text-indigo-200">Management System</span>
                         </div>
                     </div>
-                    <button id="sidebar-toggle" class="hidden md:block text-white hover:bg-white hover:bg-opacity-10 p-2 rounded-lg transition-all duration-300 flex-shrink-0">
+                    <button id="sidebar-toggle" class="hidden md:block text-white hover:bg-white hover:bg-opacity-10 p-2 rounded-lg transition-all duration-200 flex-shrink-0">
                         <i class="fas fa-chevron-left"></i>
                     </button>
                 </div>
@@ -139,9 +155,9 @@
             <nav class="sidebar-nav flex-1 overflow-y-auto py-6 px-3">
                 <div class="space-y-2">
                     <!-- Dashboard -->
-                    <a href="{{ route('admin.dashboard') }}" class="menu-item flex items-center py-3.5 px-4 rounded-xl transition-all duration-300 hover:bg-white hover:bg-opacity-10 {{ request()->routeIs('admin.dashboard') ? 'active bg-white bg-opacity-10 shadow-lg' : '' }} group">
+                    <a href="{{ route('admin.dashboard') }}" class="menu-item flex items-center py-3.5 px-4 rounded-xl transition-all duration-150 hover:bg-white hover:bg-opacity-10 {{ request()->routeIs('admin.dashboard') ? 'active bg-white bg-opacity-10 no-fancy-shadow' : '' }} group">
                         <div class="flex items-center justify-center w-10 flex-shrink-0">
-                            <i class="fas fa-home text-xl group-hover:scale-110 transition-transform duration-300"></i>
+                            <i class="fas fa-home text-xl group-hover:scale-110 transition-transform duration-200"></i>
                         </div>
                         <span class="menu-text ml-4 font-medium">Dashboard</span>
                         @if(request()->routeIs('admin.dashboard'))
@@ -150,7 +166,7 @@
                     </a>
                     
                     <!-- Projects -->
-                    <a href="{{ route('admin.projects.index') }}" class="menu-item flex items-center py-3.5 px-4 rounded-xl transition-all duration-300 hover:bg-white hover:bg-opacity-10 {{ request()->routeIs('admin.projects.index') || request()->routeIs('admin.projects.create') || request()->routeIs('admin.projects.edit') ? 'active bg-white bg-opacity-10 shadow-lg' : '' }} group">
+                    <a href="{{ route('admin.projects.index') }}" class="menu-item flex items-center py-3.5 px-4 rounded-xl transition-all duration-150 hover:bg-white hover:bg-opacity-10 {{ request()->routeIs('admin.projects.index') || request()->routeIs('admin.projects.create') || request()->routeIs('admin.projects.edit') ? 'active bg-white bg-opacity-10 no-fancy-shadow' : '' }} group">
                         <div class="flex items-center justify-center w-10 flex-shrink-0">
                             <i class="fas fa-project-diagram text-xl group-hover:scale-110 transition-transform duration-300"></i>
                         </div>
@@ -161,7 +177,7 @@
                     </a>
                     
                     <!-- History -->
-                    <a href="{{ route('admin.projects.history') }}" class="menu-item flex items-center py-3.5 px-4 rounded-xl transition-all duration-300 hover:bg-white hover:bg-opacity-10 {{ request()->routeIs('admin.projects.history') ? 'active bg-white bg-opacity-10 shadow-lg' : '' }} group">
+                    <a href="{{ route('admin.projects.history') }}" class="menu-item flex items-center py-3.5 px-4 rounded-xl transition-all duration-150 hover:bg-white hover:bg-opacity-10 {{ request()->routeIs('admin.projects.history') ? 'active bg-white bg-opacity-10 no-fancy-shadow' : '' }} group">
                         <div class="flex items-center justify-center w-10 flex-shrink-0">
                             <i class="fas fa-history text-xl group-hover:scale-110 transition-transform duration-300"></i>
                         </div>
@@ -172,7 +188,7 @@
                     </a>
                     
                     <!-- Users -->
-                    <a href="{{ route('admin.users.index') }}" class="menu-item flex items-center py-3.5 px-4 rounded-xl transition-all duration-300 hover:bg-white hover:bg-opacity-10 {{ request()->routeIs('admin.users.*') ? 'active bg-white bg-opacity-10 shadow-lg' : '' }} group">
+                    <a href="{{ route('admin.users.index') }}" class="menu-item flex items-center py-3.5 px-4 rounded-xl transition-all duration-150 hover:bg-white hover:bg-opacity-10 {{ request()->routeIs('admin.users.*') ? 'active bg-white bg-opacity-10 no-fancy-shadow' : '' }} group">
                         <div class="flex items-center justify-center w-10 flex-shrink-0">
                             <i class="fas fa-users text-xl group-hover:scale-110 transition-transform duration-300"></i>
                         </div>
@@ -183,7 +199,7 @@
                     </a>
                     
                     <!-- Monitoring -->
-                    <a href="{{ route('admin.monitoring.index') }}" class="menu-item flex items-center py-3.5 px-4 rounded-xl transition-all duration-300 hover:bg-white hover:bg-opacity-10 {{ request()->routeIs('admin.monitoring.*') ? 'active bg-white bg-opacity-10 shadow-lg' : '' }} group">
+                    <a href="{{ route('admin.monitoring.index') }}" class="menu-item flex items-center py-3.5 px-4 rounded-xl transition-all duration-150 hover:bg-white hover:bg-opacity-10 {{ request()->routeIs('admin.monitoring.*') ? 'active bg-white bg-opacity-10 no-fancy-shadow' : '' }} group">
                         <div class="flex items-center justify-center w-10 flex-shrink-0">
                             <i class="fas fa-chart-line text-xl group-hover:scale-110 transition-transform duration-300"></i>
                         </div>
@@ -195,30 +211,16 @@
                 </div>
             </nav>
 
-            <!-- User Info & Logout - Fixed Bottom -->
-            <div class="flex-shrink-0 border-t border-white border-opacity-20">
-                <!-- User Profile -->
-                <div class="p-4">
-                    <div class="bg-white bg-opacity-10 rounded-xl p-3 mb-3 backdrop-blur-sm hover:bg-opacity-20 transition-all duration-300 cursor-pointer">
-                        <div class="flex items-center justify-center sidebar-minimized:justify-center">
-                            <div class="bg-gradient-to-br from-purple-400 to-indigo-500 rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg flex-shrink-0 shadow-lg">
-                                {{ strtoupper(substr(Auth::user()->full_name, 0, 1)) }}
-                            </div>
-                            <div class="menu-text flex-1 min-w-0 ml-3">
-                                <p class="font-semibold text-sm truncate">{{ Auth::user()->full_name }}</p>
-                                <p class="text-xs text-indigo-200 truncate">{{ Auth::user()->email }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <!-- Logout - Fixed Bottom -->
+            <div class="flex-shrink-0 border-t" style="border-color: rgba(255,255,255,0.12)">
                 
                 <!-- Logout Button -->
                 <div class="p-4 pt-0">
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" class="flex items-center justify-center sidebar-expanded:justify-start w-full py-3.5 px-4 rounded-xl transition-all duration-300 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-lg hover:shadow-xl group" title="Keluar">
+                        <button type="submit" class="flex items-center justify-center sidebar-expanded:justify-start w-full py-3.5 px-4 rounded-xl transition-all duration-150 bg-white bg-opacity-10 hover:bg-opacity-20 group" title="Keluar" style="backdrop-filter: none;">
                             <div class="flex items-center justify-center w-10 flex-shrink-0">
-                                <i class="fas fa-sign-out-alt text-xl group-hover:translate-x-1 transition-transform duration-300"></i>
+                                <i class="fas fa-sign-out-alt text-xl group-hover:translate-x-1 transition-transform duration-200"></i>
                             </div>
                             <span class="menu-text ml-4 font-semibold">Keluar</span>
                         </button>
@@ -261,28 +263,26 @@
                             @if($readyProjects->count() > 0)
                                 <a href="{{ route('admin.projects.index') }}" 
                                    class="relative flex items-center space-x-2 px-3 py-2 rounded-xl hover:bg-green-50 transition-all duration-300 group">
-                                    <div class="relative">
-                                        <i class="fas fa-trophy text-green-600 text-xl group-hover:scale-110 transition-transform duration-300"></i>
-                                        <span class="absolute -top-2 -right-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full badge-pulse">
-                                            {{ $readyProjects->count() }}
-                                        </span>
-                                    </div>
-                                    <div class="hidden lg:block">
-                                        <p class="text-xs font-semibold text-green-700">Proyek Siap</p>
-                                        <p class="text-xs text-green-600">Klik untuk selesaikan</p>
-                                    </div>
+                                            <div class="relative">
+                                                <i class="fas fa-trophy text-white text-xl group-hover:scale-110 transition-transform duration-200"></i>
+                                                <span class="absolute -top-2 -right-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white" style="background:var(--primary-dark); border-radius:999px;">{{ $readyProjects->count() }}</span>
+                                            </div>
+                                            <div class="hidden lg:block">
+                                                <p class="text-xs font-semibold text-white">Proyek Siap</p>
+                                                <p class="text-xs text-white" style="opacity:0.85">Klik untuk selesaikan</p>
+                                            </div>
                                 </a>
                             @endif
                             
                             <!-- User Profile -->
-                            <div class="flex items-center space-x-3 bg-gradient-to-r from-purple-50 to-indigo-50 px-3 py-2 rounded-xl border border-purple-200">
+                            <div class="flex items-center space-x-3 px-3 py-2 rounded-xl" style="background:transparent;">
                                 <div class="hidden sm:block text-right">
                                     <p class="text-sm font-semibold text-gray-800">{{ Auth::user()->full_name }}</p>
                                     <span class="inline-block text-xs text-purple-700 font-medium">
                                         <i class="fas fa-shield-alt mr-1"></i>Administrator
                                     </span>
                                 </div>
-                                <div class="bg-gradient-to-br from-purple-500 to-indigo-600 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold shadow-lg">
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold" style="background:var(--panel-bg); color:var(--primary); border:2px solid rgba(0,0,0,0.06)">
                                     {{ strtoupper(substr(Auth::user()->full_name, 0, 1)) }}
                                 </div>
                             </div>
@@ -292,30 +292,30 @@
             </header>
 
             <!-- Main Content Area -->
-            <main class="flex-1 p-4 sm:p-6 lg:p-8 bg-gray-50">
+            <main class="flex-1 p-4 sm:p-6 lg:p-8" style="background:var(--muted-bg)">
                 @if(session('success'))
-                    <div class="alert-notification bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 text-green-700 px-4 py-3 rounded-xl shadow-lg mb-4 flex items-center justify-between" role="alert">
+                    <div class="alert-notification panel-bg rounded-xl px-4 py-3 mb-4 flex items-center justify-between" role="alert" style="border-left:4px solid var(--primary);">
                         <div class="flex items-center">
-                            <div class="bg-green-500 rounded-full p-2 mr-3">
-                                <i class="fas fa-check text-white"></i>
+                            <div style="background:var(--primary); color:white" class="rounded-full p-2 mr-3">
+                                <i class="fas fa-check"></i>
                             </div>
                             <span class="font-medium">{{ session('success') }}</span>
                         </div>
-                        <button onclick="this.parentElement.remove()" class="text-green-700 hover:text-green-900 p-1 hover:bg-green-200 rounded-lg transition-all duration-300">
+                        <button onclick="this.parentElement.remove()" class="p-1 rounded-lg" style="color:var(--primary);">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
                 @endif
 
                 @if(session('error'))
-                    <div class="alert-notification bg-gradient-to-r from-red-50 to-pink-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded-xl shadow-lg mb-4 flex items-center justify-between" role="alert">
+                    <div class="alert-notification panel-bg rounded-xl px-4 py-3 mb-4 flex items-center justify-between" role="alert" style="border-left:4px solid var(--primary);">
                         <div class="flex items-center">
-                            <div class="bg-red-500 rounded-full p-2 mr-3">
-                                <i class="fas fa-exclamation-triangle text-white"></i>
+                            <div style="background:var(--primary); color:white" class="rounded-full p-2 mr-3">
+                                <i class="fas fa-exclamation-triangle"></i>
                             </div>
                             <span class="font-medium">{{ session('error') }}</span>
                         </div>
-                        <button onclick="this.parentElement.remove()" class="text-red-700 hover:text-red-900 p-1 hover:bg-red-200 rounded-lg transition-all duration-300">
+                        <button onclick="this.parentElement.remove()" class="p-1 rounded-lg" style="color:var(--primary);">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
