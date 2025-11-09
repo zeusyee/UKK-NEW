@@ -583,6 +583,7 @@
                                                     <p class="text-sm text-gray-600 mt-1">This subtask has been approved and completed</p>
                                                 </div>
                                             @endif
+                                            
                                         </div>
                                     </div>
                                 </div>

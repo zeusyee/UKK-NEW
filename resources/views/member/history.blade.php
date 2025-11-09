@@ -23,44 +23,44 @@
     <!-- Statistics Cards -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
         <!-- Total Completed Projects -->
-        <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-4 sm:p-6 text-white">
+        <div class="bg-white rounded-lg p-4 sm:p-6 border-l-4" style="border-color: #1e40af;">
             <div class="flex flex-col">
-                <p class="text-green-100 text-xs sm:text-sm font-medium mb-1">Proyek Selesai</p>
-                <p class="text-3xl sm:text-4xl font-bold">{{ $completedProjects->count() }}</p>
-                <p class="text-green-100 text-xs mt-1">
+                <p class="text-gray-600 text-xs sm:text-sm font-medium mb-2">Proyek Selesai</p>
+                <p class="text-3xl sm:text-4xl font-bold text-gray-900">{{ $completedProjects->count() }}</p>
+                <p class="text-gray-500 text-xs mt-2">
                     <i class="fas fa-trophy mr-1"></i>Completed
                 </p>
             </div>
         </div>
 
         <!-- Total Tasks -->
-        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-4 sm:p-6 text-white">
+        <div class="bg-white rounded-lg p-4 sm:p-6 border-l-4" style="border-color: #1e40af;">
             <div class="flex flex-col">
-                <p class="text-blue-100 text-xs sm:text-sm font-medium mb-1">Total Tugas</p>
-                <p class="text-3xl sm:text-4xl font-bold">{{ $totalTasks }}</p>
-                <p class="text-blue-100 text-xs mt-1">
+                <p class="text-gray-600 text-xs sm:text-sm font-medium mb-2">Total Tugas</p>
+                <p class="text-3xl sm:text-4xl font-bold text-gray-900">{{ $totalTasks }}</p>
+                <p class="text-gray-500 text-xs mt-2">
                     <i class="fas fa-tasks mr-1"></i>Tasks
                 </p>
             </div>
         </div>
 
         <!-- Tasks Completed -->
-        <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-4 sm:p-6 text-white">
+        <div class="bg-white rounded-lg p-4 sm:p-6 border-l-4" style="border-color: #1e40af;">
             <div class="flex flex-col">
-                <p class="text-purple-100 text-xs sm:text-sm font-medium mb-1">Tugas Selesai</p>
-                <p class="text-3xl sm:text-4xl font-bold">{{ $completedTasks }}</p>
-                <p class="text-purple-100 text-xs mt-1">
+                <p class="text-gray-600 text-xs sm:text-sm font-medium mb-2">Tugas Selesai</p>
+                <p class="text-3xl sm:text-4xl font-bold text-gray-900">{{ $completedTasks }}</p>
+                <p class="text-gray-500 text-xs mt-2">
                     <i class="fas fa-check-circle mr-1"></i>Done
                 </p>
             </div>
         </div>
 
         <!-- Completion Rate -->
-        <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-4 sm:p-6 text-white">
+        <div class="bg-white rounded-lg p-4 sm:p-6 border-l-4" style="border-color: #1e40af;">
             <div class="flex flex-col">
-                <p class="text-orange-100 text-xs sm:text-sm font-medium mb-1">Tingkat Selesai</p>
-                <p class="text-3xl sm:text-4xl font-bold">{{ $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100) : 0 }}%</p>
-                <p class="text-orange-100 text-xs mt-1">
+                <p class="text-gray-600 text-xs sm:text-sm font-medium mb-2">Tingkat Selesai</p>
+                <p class="text-3xl sm:text-4xl font-bold text-gray-900">{{ $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100) : 0 }}%</p>
+                <p class="text-gray-500 text-xs mt-2">
                     <i class="fas fa-percentage mr-1"></i>Success Rate
                 </p>
             </div>
@@ -68,9 +68,9 @@
     </div>
 
     <!-- Completed Projects List -->
-    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-        <div class="bg-gradient-to-r from-purple-500 to-indigo-600 p-4 sm:p-6">
-            <h2 class="text-lg sm:text-xl font-bold text-white flex items-center">
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="p-4 sm:p-6" style="border-bottom: 2px solid #1e40af;">
+            <h2 class="text-lg sm:text-xl font-bold text-gray-900 flex items-center" style="color: #1e40af;">
                 <i class="fas fa-list mr-3"></i>
                 Daftar Proyek yang Telah Diselesaikan
             </h2>
@@ -102,20 +102,20 @@
                                 : 0;
                         @endphp
                         
-                        <div class="project-item border-l-4 border-green-500 bg-gradient-to-r from-green-50 to-white rounded-r-lg p-4 sm:p-5 hover:shadow-xl transition-all duration-300"
+                        <div class="border-l-4 bg-white rounded-lg p-4 sm:p-5 hover:shadow-lg transition-all duration-300" style="border-color: #1e40af;"
                              data-name="{{ strtolower($project->project_name) }}">
                             
                             <div class="flex flex-col gap-4">
                                 <!-- Header -->
                                 <div>
                                     <div class="flex items-start gap-2 mb-2 flex-wrap">
-                                        <h3 class="text-lg sm:text-xl font-bold text-gray-800 flex-1">{{ $project->project_name }}</h3>
-                                        <span class="px-2.5 py-1 text-xs bg-green-100 text-green-700 rounded-full font-bold whitespace-nowrap">
+                                        <h3 class="text-lg sm:text-xl font-bold text-gray-900 flex-1">{{ $project->project_name }}</h3>
+                                        <span class="px-2.5 py-1 text-xs bg-green-100 text-green-700 rounded-full font-semibold whitespace-nowrap">
                                             <i class="fas fa-check-circle mr-1"></i>SELESAI
                                         </span>
                                     </div>
                                     @if($myRole)
-                                        <span class="inline-block px-2.5 py-1 text-xs {{ $myRole->role === 'leader' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700' }} rounded-full font-semibold">
+                                        <span class="inline-block px-2.5 py-1 text-xs rounded-full font-semibold whitespace-nowrap" style="background-color: rgba(30, 64, 175, 0.1); color: #1e40af;">
                                             <i class="fas {{ $myRole->role === 'leader' ? 'fa-crown' : 'fa-user' }} mr-1"></i>
                                             {{ ucfirst($myRole->role) }}
                                         </span>
@@ -128,32 +128,32 @@
 
                                 <!-- Stats Grid -->
                                 <div class="grid grid-cols-2 gap-3">
-                                    <div class="bg-white rounded-lg p-3 border border-gray-200">
-                                        <p class="text-xs text-gray-500 mb-1">
+                                    <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                                        <p class="text-xs text-gray-600 mb-1">
                                             <i class="fas fa-calendar-plus mr-1"></i>Mulai
                                         </p>
-                                        <p class="text-sm font-semibold text-gray-800">{{ $project->created_at->format('d M Y') }}</p>
+                                        <p class="text-sm font-semibold text-gray-900">{{ $project->created_at->format('d M Y') }}</p>
                                     </div>
 
-                                    <div class="bg-white rounded-lg p-3 border border-gray-200">
-                                        <p class="text-xs text-gray-500 mb-1">
+                                    <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                                        <p class="text-xs text-gray-600 mb-1">
                                             <i class="fas fa-calendar-check mr-1"></i>Selesai
                                         </p>
-                                        <p class="text-sm font-semibold text-gray-800">{{ $project->completed_at ? $project->completed_at->format('d M Y') : '-' }}</p>
+                                        <p class="text-sm font-semibold text-gray-900">{{ $project->completed_at ? $project->completed_at->format('d M Y') : '-' }}</p>
                                     </div>
 
-                                    <div class="bg-white rounded-lg p-3 border border-gray-200">
-                                        <p class="text-xs text-gray-500 mb-1">
+                                    <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                                        <p class="text-xs text-gray-600 mb-1">
                                             <i class="fas fa-hourglass-half mr-1"></i>Durasi
                                         </p>
-                                        <p class="text-sm font-semibold text-gray-800">{{ $duration }} Hari</p>
+                                        <p class="text-sm font-semibold text-gray-900">{{ $duration }} Hari</p>
                                     </div>
 
-                                    <div class="bg-white rounded-lg p-3 border border-gray-200">
-                                        <p class="text-xs text-gray-500 mb-1">
+                                    <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                                        <p class="text-xs text-gray-600 mb-1">
                                             <i class="fas fa-users mr-1"></i>Tim
                                         </p>
-                                        <p class="text-sm font-semibold text-gray-800">{{ $project->members->count() }} Orang</p>
+                                        <p class="text-sm font-semibold text-gray-900">{{ $project->members->count() }} Orang</p>
                                     </div>
                                 </div>
 
@@ -161,11 +161,11 @@
                                 <div class="border-t border-gray-200 pt-3">
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm text-gray-600">
                                         <p>
-                                            <i class="fas fa-user text-blue-500 mr-1"></i>
+                                            <i class="fas fa-user mr-1" style="color: #1e40af;"></i>
                                             <span class="font-medium">Dibuat:</span> {{ $project->creator->full_name }}
                                         </p>
                                         <p>
-                                            <i class="fas fa-user-check text-green-500 mr-1"></i>
+                                            <i class="fas fa-user-check mr-1" style="color: #1e40af;"></i>
                                             <span class="font-medium">Diselesaikan:</span> {{ $project->completedBy ? $project->completedBy->full_name : '-' }}
                                         </p>
                                     </div>
@@ -177,9 +177,9 @@
 
                                 <!-- Achievement Badge -->
                                 <div class="flex items-center justify-center sm:justify-end">
-                                    <div class="bg-gradient-to-br from-green-400 to-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-md">
+                                    <div class="text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-md" style="background-color: #1e40af;">
                                         <i class="fas fa-trophy text-lg"></i>
-                                        <span class="font-bold text-sm">Completed</span>
+                                        <span class="font-semibold text-sm">Completed</span>
                                     </div>
                                 </div>
                             </div>

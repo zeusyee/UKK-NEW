@@ -7,6 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class Project extends Model
 {
     protected $primaryKey = 'project_id';
+    public $keyType = 'string';
+    public $incrementing = false;
+
+    public function getRouteKeyName()
+    {
+        return 'project_id';
+    }
+
     protected $fillable = [
         'project_name',
         'description',
@@ -44,22 +52,22 @@ class Project extends Model
     // Relationships
     public function creator()
     {
-        return $this->belongsTo(User::class, 'created_by', 'user_id');
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function members()
     {
-        return $this->hasMany(ProjectMember::class, 'project_id', 'project_id');
+        return $this->hasMany(ProjectMember::class, 'project_id');
     }
 
     public function boards()
     {
-        return $this->hasMany(Board::class, 'project_id', 'project_id');
+        return $this->hasMany(Board::class, 'project_id');
     }
 
     public function completedBy()
     {
-        return $this->belongsTo(User::class, 'completed_by', 'user_id');
+        return $this->belongsTo(User::class, 'completed_by');
     }
 
     /**

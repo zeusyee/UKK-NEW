@@ -26,16 +26,40 @@ class TimeLog extends Model
     // Relationships
     public function card()
     {
-        return $this->belongsTo(Card::class, 'card_id', 'card_id');
+        return $this->belongsTo(Card::class, 'card_id');
     }
 
     public function subtask()
     {
-        return $this->belongsTo(Subtask::class, 'subtask_id', 'subtask_id');
+        return $this->belongsTo(Subtask::class, 'subtask_id');
     }
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id', 'user_id');
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function board()
+    {
+        return $this->hasOneThrough(
+            Board::class,
+            Card::class,
+            'card_id',
+            'board_id',
+            'card_id',
+            'board_id'
+        );
+    }
+
+    public function project()
+    {
+        return $this->hasOneThrough(
+            Project::class,
+            Board::class,
+            'board_id',
+            'project_id',
+            'card_id',
+            'project_id'
+        );
     }
 }

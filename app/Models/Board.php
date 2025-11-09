@@ -7,6 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class Board extends Model
 {
     protected $primaryKey = 'board_id';
+    public $keyType = 'string';
+    public $incrementing = false;
+
+    public function getRouteKeyName()
+    {
+        return 'board_id';
+    }
+
     protected $fillable = [
         'project_id',
         'board_name',
@@ -22,11 +30,11 @@ class Board extends Model
     // Relationships
     public function project()
     {
-        return $this->belongsTo(Project::class, 'project_id', 'project_id');
+        return $this->belongsTo(Project::class, 'project_id');
     }
 
     public function cards()
     {
-        return $this->hasMany(Card::class, 'board_id', 'board_id');
+        return $this->hasMany(Card::class, 'board_id');
     }
 }

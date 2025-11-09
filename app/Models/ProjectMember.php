@@ -21,11 +21,11 @@ class ProjectMember extends Model
     // Relationships
     public function project()
     {
-        return $this->belongsTo(Project::class, 'project_id', 'project_id');
+        return $this->belongsTo(Project::class, 'project_id');
     }
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id', 'user_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

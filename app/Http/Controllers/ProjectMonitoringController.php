@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\User;
+use App\Models\TimeLog;
 use Illuminate\Http\Request;
 
 class ProjectMonitoringController extends Controller
@@ -70,6 +71,17 @@ class ProjectMonitoringController extends Controller
                 $overallProgress = round(($completedCards / $totalCards) * 100);
             }
             
+            // Calculate time spent on project
+            $totalMinutes = TimeLog::whereHas('card', function($query) use ($project) {
+                $query->whereHas('board', function($q) use ($project) {
+                    $q->where('project_id', $project->project_id);
+                });
+            })->get()->sum(function($log) {
+                return $log->end_time 
+                    ? $log->end_time->diffInMinutes($log->start_time) 
+                    : 0;
+            });
+            
             return [
                 'project_name' => $project->project_name,
                 'progress' => $overallProgress,
@@ -77,7 +89,8 @@ class ProjectMonitoringController extends Controller
                 'total_cards' => $totalCards,
                 'completed_cards' => $completedCards,
                 'total_subtasks' => $totalSubtasks,
-                'completed_subtasks' => $completedSubtasks
+                'completed_subtasks' => $completedSubtasks,
+                'total_time_spent' => $totalMinutes
             ];
         })->sortByDesc('progress');
 

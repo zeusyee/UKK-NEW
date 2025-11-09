@@ -108,6 +108,20 @@ class MemberSubtaskController extends Controller
 
         DB::beginTransaction();
         try {
+            // Close any active TimeLog entry
+            $activeTimeLog = \App\Models\TimeLog::where('subtask_id', $subtask->subtask_id)
+                ->where('user_id', Auth::id())
+                ->whereNull('end_time')
+                ->latest('start_time')
+                ->first();
+
+            if ($activeTimeLog) {
+                $activeTimeLog->update([
+                    'end_time' => now(),
+                    'duration_minutes' => now()->diffInMinutes($activeTimeLog->start_time)
+                ]);
+            }
+
             $subtask->update([
                 'status' => 'review',
                 'actual_hours' => $request->actual_hours ?? $subtask->actual_hours,
@@ -173,6 +187,20 @@ class MemberSubtaskController extends Controller
             'paused_at' => now()
         ]);
 
+        // Close the current TimeLog entry when pausing
+        $activeTimeLog = \App\Models\TimeLog::where('subtask_id', $subtask->subtask_id)
+            ->where('user_id', Auth::id())
+            ->whereNull('end_time')
+            ->latest('start_time')
+            ->first();
+
+        if ($activeTimeLog) {
+            $activeTimeLog->update([
+                'end_time' => now(),
+                'duration_minutes' => now()->diffInMinutes($activeTimeLog->start_time)
+            ]);
+        }
+
         return back()->with('success', 'Subtask paused successfully.');
     }
 
@@ -202,6 +230,15 @@ class MemberSubtaskController extends Controller
         $subtask->update([
             'paused_at' => null,
             'total_paused_seconds' => $subtask->total_paused_seconds + $pauseDuration
+        ]);
+
+        // Create new TimeLog entry when resuming
+        \App\Models\TimeLog::create([
+            'card_id' => $subtask->card_id,
+            'subtask_id' => $subtask->subtask_id,
+            'user_id' => Auth::id(),
+            'start_time' => now(),
+            'description' => 'Resumed working on: ' . $subtask->subtask_title
         ]);
 
         return back()->with('success', 'Subtask resumed successfully.');

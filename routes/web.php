@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\LandingController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProjectMonitoringController;
@@ -11,11 +12,14 @@ use App\Http\Controllers\CardController;
 use App\Http\Controllers\SubtaskController;
 use App\Http\Controllers\MemberCardController;
 use App\Http\Controllers\MemberSubtaskController;
+use App\Http\Controllers\TimeLogController;
 use App\Http\Controllers\Leader\LeaderSubtaskReviewController;
+
+// Landing Page
+Route::get('/', [LandingController::class, 'index'])->name('landing');
 
 // Authentication Routes
 Route::middleware('guest')->group(function () {
-    Route::get('/', [AuthController::class, 'showLogin'])->name('login');
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
@@ -85,9 +89,19 @@ Route::middleware('auth')->group(function () {
             ->name('admin.monitoring.index');
         Route::get('admin/monitoring/projects/{project}', [ProjectMonitoringController::class, 'projectDetails'])
             ->name('admin.monitoring.project-details');
-    });
 
-    // Leader routes (for users with 'leader' or 'admin' role in a project)
+        // Time Logs routes (Admin)
+        Route::get('admin/time-logs', [TimeLogController::class, 'adminIndex'])
+            ->name('admin.time-logs.index');
+        Route::get('admin/time-logs/analytics', [TimeLogController::class, 'adminAnalytics'])
+            ->name('admin.time-logs.analytics');
+        Route::get('admin/time-logs/export', [TimeLogController::class, 'adminExportCSV'])
+            ->name('admin.time-logs.export');
+        Route::get('admin/projects/{project}/time-logs', [TimeLogController::class, 'projectTimeLogs'])
+            ->name('admin.time-logs.project');
+        Route::get('admin/users/{user}/time-logs', [TimeLogController::class, 'userTimeLogs'])
+            ->name('admin.time-logs.user');
+    });
     Route::prefix('leader')->name('leader.')->group(function () {
         Route::get('/dashboard', [LeaderController::class, 'dashboard'])->name('dashboard');
         Route::get('/history', [LeaderController::class, 'history'])->name('history');

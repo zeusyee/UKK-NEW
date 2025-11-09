@@ -7,6 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class Card extends Model
 {
     protected $primaryKey = 'card_id';
+    public $keyType = 'string';
+    public $incrementing = false;
+
+    public function getRouteKeyName()
+    {
+        return 'card_id';
+    }
+
     protected $fillable = [
         'board_id',
         'card_title',
@@ -34,32 +42,64 @@ class Card extends Model
     // Relationships
     public function board()
     {
-        return $this->belongsTo(Board::class, 'board_id', 'board_id');
+        return $this->belongsTo(Board::class, 'board_id');
     }
 
     public function creator()
     {
-        return $this->belongsTo(User::class, 'created_by', 'user_id');
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function assignedUser()
     {
-        return $this->belongsTo(User::class, 'assigned_user_id', 'user_id');
+        return $this->belongsTo(User::class, 'assigned_user_id');
+    }
+
+    public function cardAssignments()
+    {
+        return $this->hasMany(CardAssignment::class, 'card_id');
     }
 
     public function subtasks()
     {
-        return $this->hasMany(Subtask::class, 'card_id', 'card_id');
+        return $this->hasMany(Subtask::class, 'card_id');
     }
 
     public function comments()
     {
-        return $this->hasMany(Comment::class, 'card_id', 'card_id');
+        return $this->hasMany(Comment::class, 'card_id');
     }
 
     public function timeLogs()
     {
-        return $this->hasMany(TimeLog::class, 'card_id', 'card_id');
+        return $this->hasMany(TimeLog::class, 'card_id');
+    }
+
+    /**
+     * Get the active assignment for this card
+     */
+    public function getActiveAssignment()
+    {
+        return CardAssignment::getActiveAssignment($this->card_id);
+    }
+
+    /**
+     * Assign card to a user
+     */
+    public function assignToUser($userId)
+    {
+        $this->update(['assigned_user_id' => $userId, 'status' => 'in_progress']);
+        
+        // Create CardAssignment record
+        return CardAssignment::createAssignment($this->card_id, $userId);
+    }
+
+    /**
+     * Get all assignments history for this card
+     */
+    public function getAssignmentHistory()
+    {
+        return $this->cardAssignments()->orderBy('assigned_at', 'desc')->get();
     }
 
     /**
@@ -158,5 +198,22 @@ class Card extends Model
             'review' => $subtasks->where('status', 'review')->count(),
             'done' => $subtasks->where('status', 'done')->count(),
         ];
+    }
+
+    /**
+     * Boot the model
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        // When card is updated with assigned_user_id
+        static::updating(function ($card) {
+            // Check if assigned_user_id is being changed
+            if ($card->isDirty('assigned_user_id') && $card->assigned_user_id) {
+                // Create new CardAssignment record
+                CardAssignment::createAssignment($card->card_id, $card->assigned_user_id);
+            }
+        });
     }
 }

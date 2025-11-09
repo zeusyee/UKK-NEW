@@ -9,38 +9,42 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
+        :root {
+            --primary: #1e40af;
+            --primary-dark: #1e3a8a;
+        }
+        
         * {
             font-family: 'Inter', sans-serif;
         }
         
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f3f4f6;
             min-height: 100vh;
         }
         
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        .login-card {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
         
         .input-field {
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
+            border-color: #e5e7eb;
         }
         
         .input-field:focus {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            transition: all 0.3s ease;
+            background: var(--primary);
+            transition: all 0.2s ease;
         }
         
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.6);
+            background: var(--primary-dark);
         }
         
         .alert-notification {
@@ -73,33 +77,33 @@
 </head>
 <body>
     <div class="min-h-screen flex items-center justify-center p-4 py-12">
-        <div class="max-w-md w-full space-y-8 p-8 glass-effect rounded-2xl">
+        <div class="max-w-md w-full space-y-8 p-8 login-card rounded-lg">
             <!-- Logo/Icon -->
             <div class="text-center">
-                <div class="mx-auto w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg">
-                    <i class="fas fa-user-plus text-white text-2xl"></i>
+                <div class="mx-auto w-12 h-12 rounded flex items-center justify-center mb-4" style="background: var(--primary);">
+                    <i class="fas fa-user-plus text-white text-lg"></i>
                 </div>
-                <h2 class="text-3xl font-bold text-gray-800 mb-2">
+                <h2 class="text-2xl font-bold text-gray-900 mb-1">
                     Create Account
                 </h2>
-                <p class="text-gray-600">Join us today and get started</p>
+                <p class="text-sm text-gray-600">Join us today and get started</p>
             </div>
 
             <form class="mt-8 space-y-6" action="{{ route('register') }}" method="POST">
                 @csrf
                 
                 @if ($errors->any())
-                <div class="alert-notification bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded-lg relative" role="alert">
+                <div class="alert-notification bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded relative" role="alert">
                     <div class="flex items-start justify-between">
                         <div class="flex items-start">
-                            <i class="fas fa-exclamation-circle text-red-500 mt-1 mr-3"></i>
+                            <i class="fas fa-exclamation-circle text-red-500 mt-1 mr-3 flex-shrink-0"></i>
                             <ul class="list-disc list-inside space-y-1">
                                 @foreach ($errors->all() as $error)
                                     <li class="text-sm">{{ $error }}</li>
                                 @endforeach
                             </ul>
                         </div>
-                        <button onclick="this.parentElement.parentElement.remove()" class="text-red-500 hover:text-red-700 ml-4 transition">
+                        <button onclick="this.parentElement.parentElement.remove()" class="text-red-500 hover:text-red-700 ml-4 transition flex-shrink-0">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
@@ -110,10 +114,10 @@
                     <!-- Username Field -->
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fas fa-user text-gray-400"></i>
+                            <i class="fas fa-user text-gray-400 text-sm"></i>
                         </div>
                         <input id="username" name="username" type="text" required 
-                            class="input-field appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
+                            class="input-field appearance-none block w-full pl-10 pr-3 py-2 border rounded text-gray-900 placeholder-gray-400 text-sm focus:outline-none" 
                             placeholder="Username"
                             value="{{ old('username') }}">
                     </div>
@@ -121,10 +125,10 @@
                     <!-- Full Name Field -->
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fas fa-id-card text-gray-400"></i>
+                            <i class="fas fa-id-card text-gray-400 text-sm"></i>
                         </div>
                         <input id="full_name" name="full_name" type="text" required 
-                            class="input-field appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
+                            class="input-field appearance-none block w-full pl-10 pr-3 py-2 border rounded text-gray-900 placeholder-gray-400 text-sm focus:outline-none" 
                             placeholder="Full Name"
                             value="{{ old('full_name') }}">
                     </div>
@@ -132,10 +136,10 @@
                     <!-- Email Field -->
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fas fa-envelope text-gray-400"></i>
+                            <i class="fas fa-envelope text-gray-400 text-sm"></i>
                         </div>
                         <input id="email" name="email" type="email" required 
-                            class="input-field appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
+                            class="input-field appearance-none block w-full pl-10 pr-3 py-2 border rounded text-gray-900 placeholder-gray-400 text-sm focus:outline-none" 
                             placeholder="Email Address"
                             value="{{ old('email') }}">
                     </div>
@@ -143,14 +147,14 @@
                     <!-- Password Field -->
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fas fa-lock text-gray-400"></i>
+                            <i class="fas fa-lock text-gray-400 text-sm"></i>
                         </div>
                         <input id="password" name="password" type="password" required 
-                            class="input-field appearance-none block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
+                            class="input-field appearance-none block w-full pl-10 pr-10 py-2 border rounded text-gray-900 placeholder-gray-400 text-sm focus:outline-none" 
                             placeholder="Password"
                             oninput="checkPasswordStrength()">
                         <button type="button" onclick="togglePassword('password', 'toggleIcon1')" class="absolute inset-y-0 right-0 pr-3 flex items-center">
-                            <i id="toggleIcon1" class="fas fa-eye text-gray-400 hover:text-gray-600 transition"></i>
+                            <i id="toggleIcon1" class="fas fa-eye text-gray-400 hover:text-gray-600 transition text-sm"></i>
                         </button>
                     </div>
 
@@ -165,70 +169,70 @@
                     <!-- Confirm Password Field -->
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fas fa-lock text-gray-400"></i>
+                            <i class="fas fa-lock text-gray-400 text-sm"></i>
                         </div>
                         <input id="password_confirmation" name="password_confirmation" type="password" required 
-                            class="input-field appearance-none block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
+                            class="input-field appearance-none block w-full pl-10 pr-10 py-2 border rounded text-gray-900 placeholder-gray-400 text-sm focus:outline-none" 
                             placeholder="Confirm Password">
                         <button type="button" onclick="togglePassword('password_confirmation', 'toggleIcon2')" class="absolute inset-y-0 right-0 pr-3 flex items-center">
-                            <i id="toggleIcon2" class="fas fa-eye text-gray-400 hover:text-gray-600 transition"></i>
+                            <i id="toggleIcon2" class="fas fa-eye text-gray-400 hover:text-gray-600 transition text-sm"></i>
                         </button>
                     </div>
                 </div>
 
                 <!-- Terms and Conditions -->
-                <div class="flex items-start">
+                <div class="flex items-start pt-2">
                     <div class="flex items-center h-5">
                         <input id="terms" name="terms" type="checkbox" required
-                            class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            class="h-4 w-4 rounded border-gray-300" style="accent-color: var(--primary);">
                     </div>
-                    <div class="ml-3 text-sm">
+                    <div class="ml-3 text-xs">
                         <label for="terms" class="text-gray-600">
                             I agree to the 
-                            <a href="#" class="font-medium text-purple-600 hover:text-purple-500">Terms and Conditions</a> 
+                            <a href="#" class="font-medium transition" style="color: var(--primary);">Terms</a> 
                             and 
-                            <a href="#" class="font-medium text-purple-600 hover:text-purple-500">Privacy Policy</a>
+                            <a href="#" class="font-medium transition" style="color: var(--primary);">Privacy Policy</a>
                         </label>
                     </div>
                 </div>
 
                 <!-- Submit Button -->
-                <div>
+                <div class="pt-2">
                     <button type="submit" 
-                        class="btn-primary group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                        class="btn-primary group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-semibold rounded text-white focus:outline-none focus:ring-2 focus:ring-offset-2" style="--tw-ring-color: var(--primary);">
                         <span class="absolute left-0 inset-y-0 flex items-center pl-3">
-                            <i class="fas fa-user-plus text-white opacity-75"></i>
+                            <i class="fas fa-user-plus text-white opacity-75 text-xs"></i>
                         </span>
                         Create Account
                     </button>
                 </div>
 
                 <!-- Login Link -->
-                <div class="text-center">
-                    <p class="text-sm text-gray-600">
+                <div class="text-center pt-2">
+                    <p class="text-xs text-gray-600">
                         Already have an account? 
-                        <a href="{{ route('login') }}" class="font-semibold text-purple-600 hover:text-purple-500 transition">
+                        <a href="{{ route('login') }}" class="font-semibold transition" style="color: var(--primary);">
                             Sign in
                         </a>
                     </p>
                 </div>
             </form>
 
-            <!-- Social Register (Optional) -->
-            <div class="mt-6">
+            <!-- Social Register -->
+            <div class="pt-4">
                 <div class="relative">
                     <div class="absolute inset-0 flex items-center">
                         <div class="w-full border-t border-gray-300"></div>
                     </div>
-                    <div class="relative flex justify-center text-sm">
+                    <div class="relative flex justify-center text-xs">
                         <span class="px-2 bg-white text-gray-500">Or register with</span>
                     </div>
                 </div>
 
-                <div class="mt-6 grid grid-cols-1 gap-3">
-                    <a href="{{ route('auth.google') }}" class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 transition">
+                <div class="mt-4">
+                    <a href="{{ route('auth.google') }}" class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
                         <i class="fab fa-google text-red-500 mr-2"></i>
-                        Continue with Google
+                        Google
                     </a>
                 </div>
             </div>
@@ -280,7 +284,7 @@
                     break;
                 case 3:
                     strengthBar.style.width = '75%';
-                    strengthBar.style.backgroundColor = '#3b82f6';
+                    strengthBar.style.backgroundColor = '#1e40af';
                     feedback = 'Good password';
                     break;
                 case 4:
