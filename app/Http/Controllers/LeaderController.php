@@ -302,4 +302,70 @@ $project->load([
 
         return view('leader.monitoring', compact('project', 'cardsWithProgress', 'member'));
     }
+
+    /**
+     * Show project members list
+     */
+    public function members(Project $project)
+    {
+        // Check if project is completed
+        if ($project->status === 'completed') {
+            return redirect()->route('leader.dashboard')
+                ->with('error', 'This project has been completed. Member list is only available for active projects.');
+        }
+        
+        // Check if the authenticated user is a leader/admin of this project
+        $member = ProjectMember::where('project_id', $project->project_id)
+            ->where('user_id', Auth::id())
+            ->whereIn('role', ['admin', 'leader'])
+            ->first();
+
+        if (!$member) {
+            return redirect()->route('leader.dashboard')
+                ->with('error', 'You do not have permission to view this project.');
+        }
+
+        // Load project members with their assigned cards
+        $project->load([
+            'members.user',
+            'boards.cards' => function($query) {
+                $query->orderBy('position', 'asc');
+            },
+            'boards.cards.subtasks'
+        ]);
+
+        // Build member statistics (only for role 'member', exclude admin and leader)
+        $membersData = [];
+        foreach ($project->members as $projectMember) {
+            // Skip admin and leader roles
+            if ($projectMember->role !== 'member') {
+                continue;
+            }
+            
+            // Get cards assigned to this member
+            $assignedCards = [];
+            foreach ($project->boards as $board) {
+                foreach ($board->cards as $card) {
+                    if ($card->assigned_user_id == $projectMember->user_id) {
+                        $assignedCards[] = [
+                            'card' => $card,
+                            'board' => $board,
+                        ];
+                    }
+                }
+            }
+
+            $membersData[] = [
+                'member' => $projectMember,
+                'user' => $projectMember->user,
+                'assigned_cards' => $assignedCards,
+                'total_cards' => count($assignedCards),
+            ];
+        }
+
+        // Convert to collection for easier manipulation in view
+        $membersData = collect($membersData);
+
+        return view('leader.members', compact('project', 'membersData', 'member'));
+    }
 }

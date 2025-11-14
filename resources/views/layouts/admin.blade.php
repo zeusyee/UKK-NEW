@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Admin Dashboard - @yield('title')</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -194,6 +195,17 @@
                         </div>
                         <span class="menu-text ml-4 font-medium">Pengguna</span>
                         @if(request()->routeIs('admin.users.*'))
+                            <i class="fas fa-circle menu-text ml-auto text-xs text-indigo-300"></i>
+                        @endif
+                    </a>
+                    
+                    <!-- Time Logs -->
+                    <a href="{{ route('admin.time-logs.index') }}" class="menu-item flex items-center py-3.5 px-4 rounded-xl transition-all duration-150 hover:bg-white hover:bg-opacity-10 {{ request()->routeIs('admin.time-logs.*') || request()->routeIs('admin.team-productivity') ? 'active bg-white bg-opacity-10 no-fancy-shadow' : '' }} group">
+                        <div class="flex items-center justify-center w-10 flex-shrink-0">
+                            <i class="fas fa-clock text-xl group-hover:scale-110 transition-transform duration-300"></i>
+                        </div>
+                        <span class="menu-text ml-4 font-medium">Time Logs</span>
+                        @if(request()->routeIs('admin.time-logs.*') || request()->routeIs('admin.team-productivity'))
                             <i class="fas fa-circle menu-text ml-auto text-xs text-indigo-300"></i>
                         @endif
                     </a>
@@ -451,5 +463,7 @@
             });
         });
     </script>
+    
+    @stack('scripts')
 </body>
 </html>

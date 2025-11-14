@@ -7,8 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class Project extends Model
 {
     protected $primaryKey = 'project_id';
-    public $keyType = 'string';
-    public $incrementing = false;
+    public $keyType = 'int';
+    public $incrementing = true;
 
     public function getRouteKeyName()
     {

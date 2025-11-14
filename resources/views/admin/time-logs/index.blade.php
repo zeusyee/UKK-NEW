@@ -79,9 +79,15 @@
     </div>
 
     <!-- Actions -->
-    <div class="mb-6 flex gap-2">
+    <div class="mb-6 flex gap-2 flex-wrap">
         <a href="{{ route('admin.time-logs.analytics') }}" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition">
             📊 Analytics
+        </a>
+        <a href="{{ route('admin.time-logs.report') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">
+            📋 Detailed Report
+        </a>
+        <a href="{{ route('admin.team-productivity') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition">
+            👥 Team Productivity
         </a>
         <a href="{{ route('admin.time-logs.export') }}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition">
             📥 Export CSV

@@ -96,7 +96,7 @@
         </div>
 
         <!-- Action Buttons -->
-        <div class="mt-6">
+        <div class="mt-6 flex flex-wrap gap-3">
             @php
                 $defaultBoard = $project->boards->first();
             @endphp
@@ -106,6 +106,11 @@
                     <i class="fas fa-plus mr-2"></i>Create New Card
                 </a>
             @endif
+            
+            <a href="{{ route('leader.project.members', $project) }}" 
+               class="inline-flex items-center bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-colors">
+                <i class="fas fa-users mr-2"></i>View Members
+            </a>
         </div>
     </div>
 
@@ -144,7 +149,7 @@
                     <p class="text-gray-400 text-center py-8">No cards in this project yet.</p>
                 @else
                     <!-- Kanban Board Layout -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         @php
                             $statusConfig = [
                                 'todo' => [
@@ -162,14 +167,6 @@
                                     'textColor' => 'text-blue-800',
                                     'borderColor' => 'border-blue-300',
                                     'badgeColor' => 'bg-blue-500'
-                                ],
-                                'review' => [
-                                    'title' => 'Review',
-                                    'icon' => 'fa-eye',
-                                    'bgColor' => 'bg-purple-50',
-                                    'textColor' => 'text-purple-800',
-                                    'borderColor' => 'border-purple-300',
-                                    'badgeColor' => 'bg-purple-500'
                                 ],
                                 'done' => [
                                     'title' => 'Done',

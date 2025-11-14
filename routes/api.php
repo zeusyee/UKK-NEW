@@ -23,7 +23,6 @@ Route::prefix('v1')->group(function () {
     Route::prefix('auth')->group(function () {
         Route::post('/login', [AuthApiController::class, 'login']);
         Route::post('/register', [AuthApiController::class, 'register']);
-        Route::post('/google-login', [AuthApiController::class, 'googleLogin']);
     });
 
     // Protected Routes (Requires API Token)

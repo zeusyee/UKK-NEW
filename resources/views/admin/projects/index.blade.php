@@ -82,7 +82,7 @@
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @foreach($projects as $project)
-                        <tr class="{{ $project->status === 'completed' ? 'bg-gray-50' : '' }}">
+                        <tr class="project-row {{ $project->status === 'completed' ? 'bg-gray-50' : '' }}" data-project-id="{{ $project->project_id }}">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm font-medium text-gray-900">
                                     {{ $project->project_name }}
@@ -154,9 +154,14 @@
                                 </a>
                                 
                                 @if($project->status === 'active')
-                                    <a href="{{ route('admin.projects.edit', $project) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">
+                                    <button type="button" 
+                                            class="edit-project-btn text-indigo-600 hover:text-indigo-900 mr-3"
+                                            data-project-id="{{ $project->project_id }}"
+                                            data-project-name="{{ $project->project_name }}"
+                                            data-description="{{ $project->description }}"
+                                            data-deadline="{{ $project->deadline ? date('Y-m-d', strtotime($project->deadline)) : '' }}">
                                         <i class="fas fa-edit mr-1"></i>Edit
-                                    </a>
+                                    </button>
                                     <form action="{{ route('admin.projects.destroy', $project) }}" method="POST" class="inline">
                                         @csrf
                                         @method('DELETE')
@@ -178,4 +183,224 @@
             </div>
         </div>
     </div>
+
+    <!-- Edit Project Modal -->
+    <div id="editProjectModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex justify-between items-center pb-3 border-b">
+                    <h3 class="text-lg font-bold">Edit Project</h3>
+                    <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div class="p-4">
+                    <form id="editProjectForm">
+                        <input type="hidden" id="editProjectId" name="project_id">
+                        
+                        <div class="mb-4">
+                            <label for="edit_project_name" class="block text-gray-700 text-sm font-bold mb-2">
+                                Project Name *
+                            </label>
+                            <input type="text" 
+                                   name="project_name" 
+                                   id="edit_project_name" 
+                                   class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                   required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="edit_description" class="block text-gray-700 text-sm font-bold mb-2">
+                                Description
+                            </label>
+                            <textarea name="description" 
+                                      id="edit_description" 
+                                      rows="4"
+                                      class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="edit_deadline" class="block text-gray-700 text-sm font-bold mb-2">
+                                Deadline
+                            </label>
+                            <input type="date" 
+                                   name="deadline" 
+                                   id="edit_deadline" 
+                                   class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        </div>
+
+                        <div class="flex items-center justify-between mt-6">
+                            <button type="button" 
+                                    id="cancelEditBtn"
+                                    class="text-gray-600 hover:text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                                Cancel
+                            </button>
+                            <button type="submit" 
+                                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                                Update Project
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('editProjectModal');
+            const editBtns = document.querySelectorAll('.edit-project-btn');
+            const closeModalBtn = document.getElementById('closeModalBtn');
+            const cancelEditBtn = document.getElementById('cancelEditBtn');
+            const editForm = document.getElementById('editProjectForm');
+            
+            // Open modal when edit button is clicked
+            editBtns.forEach(button => {
+                button.addEventListener('click', function() {
+                    const projectId = this.dataset.projectId;
+                    const projectName = this.dataset.projectName;
+                    const description = this.dataset.description;
+                    const deadline = this.dataset.deadline;
+                    
+                    document.getElementById('editProjectId').value = projectId;
+                    document.getElementById('edit_project_name').value = projectName;
+                    document.getElementById('edit_description').value = description;
+                    document.getElementById('edit_deadline').value = deadline;
+                    
+                    modal.classList.remove('hidden');
+                    document.body.classList.add('overflow-hidden');
+                });
+            });
+            
+            // Close modal functions
+            function closeModal() {
+                modal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }
+            
+            closeModalBtn.addEventListener('click', closeModal);
+            cancelEditBtn.addEventListener('click', closeModal);
+            
+            // Close modal when clicking outside the modal content
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+            
+            // Handle form submission
+            editForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const projectId = document.getElementById('editProjectId').value;
+                const formData = new FormData(editForm);
+                
+                // Convert FormData to regular object
+                const data = {};
+                for (let [key, value] of formData.entries()) {
+                    data[key] = value;
+                }
+                
+                // Remove the project_id from data since we use it in URL
+                delete data.project_id;
+                
+                // Make AJAX request
+                fetch(`/admin/projects/${projectId}/update-ajax`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success message
+                        showNotification('Project updated successfully', 'success');
+                        
+                        // Close modal
+                        closeModal();
+                        
+                        // Update the table row with new values
+                        const row = document.querySelector(`tr[data-project-id="${projectId}"]`);
+                        if (row) {
+                            row.querySelector('.text-gray-900').innerHTML = 
+                                `${data.project.project_name} ${data.project.status === 'completed' ? '<i class="fas fa-check-circle text-green-500 ml-2" title="Completed"></i>' : ''}`;
+                            
+                            const descriptionDisplay = data.project.description.length > 50 
+                                ? data.project.description.substring(0, 50) + '...' 
+                                : data.project.description;
+                            
+                            row.querySelector('.text-gray-500').textContent = descriptionDisplay;
+                            
+                            // Update deadline display
+                            if (data.project.deadline) {
+                                const deadlineDate = new Date(data.project.deadline);
+                                const formattedDate = deadlineDate.toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric'
+                                });
+                                
+                                const today = new Date();
+                                today.setHours(0, 0, 0, 0);
+                                const diffTime = deadlineDate - today;
+                                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                
+                                let badgeHTML = '';
+                                if (diffDays < 0) {
+                                    badgeHTML = `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                        <i class="fas fa-exclamation-circle mr-1"></i>${Math.abs(diffDays)} hari terlambat
+                                    </span>`;
+                                } else if (diffDays === 0) {
+                                    badgeHTML = `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">
+                                        <i class="fas fa-clock mr-1"></i>Hari ini!
+                                    </span>`;
+                                } else if (diffDays <= 7) {
+                                    badgeHTML = `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                        <i class="fas fa-hourglass-half mr-1"></i>${diffDays} hari tersisa
+                                    </span>`;
+                                } else {
+                                    badgeHTML = `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                        <i class="fas fa-check-circle mr-1"></i>${diffDays} hari tersisa
+                                    </span>`;
+                                }
+                                
+                                row.cells[3].innerHTML = `<div>${formattedDate}</div><div class="mt-1">${badgeHTML}</div>`;
+                            } else {
+                                row.cells[3].innerHTML = '<span class="text-gray-400">No deadline</span>';
+                            }
+                        }
+                    } else {
+                        throw new Error(data.message || 'Failed to update project');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification(error.message || 'An error occurred while updating the project', 'error');
+                });
+            });
+            
+            // Notification function
+            function showNotification(message, type) {
+                // Remove any existing notifications
+                const existing = document.querySelector('.notification');
+                if (existing) existing.remove();
+                
+                const notification = document.createElement('div');
+                notification.className = `notification fixed top-4 right-4 px-6 py-4 rounded-lg shadow-lg text-white z-50 ${
+                    type === 'success' ? 'bg-green-500' : 'bg-red-500'
+                }`;
+                notification.textContent = message;
+                
+                document.body.appendChild(notification);
+                
+                // Auto remove after 3 seconds
+                setTimeout(() => {
+                    notification.remove();
+                }, 3000);
+            }
+        });
+    </script>
 @endsection

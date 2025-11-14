@@ -7,8 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class Subtask extends Model
 {
     protected $primaryKey = 'subtask_id';
-    public $keyType = 'string';
-    public $incrementing = false;
+    public $keyType = 'int';
+    public $incrementing = true;
 
     public function getRouteKeyName()
     {
@@ -152,17 +152,6 @@ class Subtask extends Model
         }
         $this->save();
 
-        // Check if all subtasks are done, then mark card as done
-        $this->card->checkAndUpdateCompletion();
-
-        // Update CardAssignment status if card is completed
-        if ($this->card && $this->card->status === 'done') {
-            $assignment = $this->getCardAssignment();
-            if ($assignment && $assignment->assignment_status === 'in_progress') {
-                $assignment->completeAssignment();
-            }
-        }
-
         return $this;
     }
 
@@ -185,16 +174,12 @@ class Subtask extends Model
                 if ($assignment && $assignment->assignment_status === 'completed') {
                     $assignment->update(['assignment_status' => 'in_progress']);
                 }
-            } else {
-                $subtask->card->checkAndUpdateCompletion();
             }
         });
 
-        // When subtask status changes, update card status and CardAssignment
+        // When subtask status changes, update CardAssignment
         static::updated(function ($subtask) {
             if ($subtask->isDirty('status')) {
-                $subtask->card->checkAndUpdateCompletion();
-
                 // Sync CardAssignment when subtask status changes
                 if ($subtask->status === 'done') {
                     $assignment = $subtask->getCardAssignment();
@@ -202,13 +187,6 @@ class Subtask extends Model
                         $assignment->completeAssignment();
                     }
                 }
-            }
-        });
-
-        // When subtask is deleted, update card status
-        static::deleted(function ($subtask) {
-            if ($subtask->card) {
-                $subtask->card->checkAndUpdateCompletion();
             }
         });
     }

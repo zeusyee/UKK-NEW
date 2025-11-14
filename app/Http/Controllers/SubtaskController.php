@@ -269,19 +269,10 @@ class SubtaskController extends Controller
                 'completed_at' => now()
             ]);
 
-            // Automatically check and update card status based on all subtasks
-            // This will mark card as 'done' if all subtasks are completed
-            $card->checkAndUpdateCompletion();
-
             DB::commit();
             
-            $message = 'Subtask approved successfully!';
-            if ($card->status === 'done') {
-                $message .= ' All subtasks completed - Card marked as Done! 🎉';
-            }
-            
             return redirect()->route('leader.review.index')
-                ->with('success', $message);
+                ->with('success', 'Subtask approved successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Failed to approve subtask: ' . $e->getMessage());
@@ -317,9 +308,6 @@ class SubtaskController extends Controller
                 'completed_at' => null,
                 'assigned_user_id' => null
             ]);
-
-            // Update card status based on subtasks
-            $card->checkAndUpdateCompletion();
 
             DB::commit();
             

@@ -14,88 +14,139 @@ class UserController extends Controller
         return view('admin.users.index', compact('users'));
     }
 
-    public function create()
-    {
-        return view('admin.users.create');
-    }
-
     public function store(Request $request)
     {
-        $request->validate([
-            'username' => 'required|string|max:255|unique:users',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
-            'full_name' => 'required|string|max:255',
-            'role' => 'required|in:admin,member',
-        ]);
+        try {
+            $validated = $request->validate([
+                'username' => 'required|string|max:255|unique:users',
+                'email' => 'required|string|email|max:255|unique:users',
+                'password' => 'required|string|min:8',
+                'full_name' => 'required|string|max:255',
+                'role' => 'required|in:admin,member',
+            ]);
 
-        User::create([
-            'username' => $request->username,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'full_name' => $request->full_name,
-            'role' => $request->role,
-            'current_task_status' => 'idle',
-        ]);
+            User::create([
+                'username' => $validated['username'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'full_name' => $validated['full_name'],
+                'role' => $validated['role'],
+                'current_task_status' => 'idle',
+            ]);
 
-        return redirect()->route('admin.users.index')
-            ->with('success', 'User created successfully');
-    }
+            return response()->json([
+                'success' => true,
+                'message' => 'User created successfully'
+            ]);
 
-    public function edit(User $user)
-    {
-        if ($user->user_id === auth()->id()) {
-            return back()->with('error', 'You cannot edit your own account');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create user: ' . $e->getMessage()
+            ], 500);
         }
-
-        return view('admin.users.edit', compact('user'));
     }
 
     public function update(Request $request, User $user)
     {
-        if ($user->user_id === auth()->id()) {
-            return back()->with('error', 'You cannot edit your own account');
-        }
+        try {
+            // Check if user is trying to edit their own account
+            if ($user->user_id === auth()->id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You cannot edit your own account'
+                ], 403);
+            }
 
-        $request->validate([
-            'username' => 'required|string|max:255|unique:users,username,'.$user->user_id.',user_id',
-            'email' => 'required|string|email|max:255|unique:users,email,'.$user->user_id.',user_id',
-            'full_name' => 'required|string|max:255',
-            'role' => 'required|in:admin,member',
-        ]);
+            $validationRules = [
+                'username' => 'required|string|max:255|unique:users,username,'.$user->user_id.',user_id',
+                'email' => 'required|string|email|max:255|unique:users,email,'.$user->user_id.',user_id',
+                'full_name' => 'required|string|max:255',
+                'role' => 'required|in:admin,member',
+            ];
 
-        $data = [
-            'username' => $request->username,
-            'email' => $request->email,
-            'full_name' => $request->full_name,
-            'role' => $request->role,
-        ];
+            // Only validate password if provided
+            if ($request->filled('password')) {
+                $validationRules['password'] = 'required|string|min:8';
+            }
 
-        if ($request->filled('password')) {
-            $request->validate([
-                'password' => 'required|string|min:8',
+            $validated = $request->validate($validationRules);
+
+            $data = [
+                'username' => $validated['username'],
+                'email' => $validated['email'],
+                'full_name' => $validated['full_name'],
+                'role' => $validated['role'],
+            ];
+
+            if ($request->filled('password')) {
+                $data['password'] = Hash::make($validated['password']);
+            }
+
+            $user->update($data);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User updated successfully'
             ]);
-            $data['password'] = Hash::make($request->password);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update user: ' . $e->getMessage()
+            ], 500);
         }
-
-        $user->update($data);
-
-        return redirect()->route('admin.users.index')
-            ->with('success', 'User updated successfully');
     }
 
     public function destroy(User $user)
     {
-        if ($user->projectMemberships()->exists()) {
-            return back()->with('error', 'Cannot delete user with active project memberships');
-        }
+        try {
+            if ($user->user_id === auth()->id()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot delete your own account'
+                ], 403);
+            }
 
-        if ($user->user_id === auth()->id()) {
-            return back()->with('error', 'Cannot delete your own account');
-        }
+            if ($user->projectMemberships()->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot delete user with active project memberships'
+                ], 422);
+            }
 
-        $user->delete();
-        return redirect()->route('admin.users.index')
-            ->with('success', 'User deleted successfully');
+            $user->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User deleted successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete user: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function show(User $user)
+    {
+        return response()->json([
+            'success' => true,
+            'user' => $user
+        ]);
     }
 }

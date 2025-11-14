@@ -24,10 +24,6 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register']);
-    
-    // Google OAuth Routes
-    Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
-    Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 });
 
 Route::middleware('auth')->group(function () {
@@ -57,6 +53,10 @@ Route::middleware('auth')->group(function () {
             'destroy' => 'admin.projects.destroy',
         ]);
         
+        // AJAX Project update route
+        Route::put('admin/projects/{project}/update-ajax', [ProjectController::class, 'updateAjax'])
+            ->name('admin.projects.update-ajax');
+        
         // Project member management routes
         Route::get('admin/projects/{project}/members', [ProjectController::class, 'members'])
             ->name('admin.projects.members');
@@ -73,16 +73,14 @@ Route::middleware('auth')->group(function () {
         Route::get('admin/projects/history/completed', [ProjectController::class, 'history'])
             ->name('admin.projects.history');
 
-        // User management routes
+        // User management routes - Hapus create dan edit
         Route::resource('admin/users', UserController::class)->names([
             'index' => 'admin.users.index',
-            'create' => 'admin.users.create',
             'store' => 'admin.users.store',
             'show' => 'admin.users.show',
-            'edit' => 'admin.users.edit',
             'update' => 'admin.users.update',
             'destroy' => 'admin.users.destroy',
-        ]);
+        ])->except(['create', 'edit']);
 
         // Project Monitoring routes
         Route::get('admin/monitoring', [ProjectMonitoringController::class, 'index'])
@@ -97,16 +95,23 @@ Route::middleware('auth')->group(function () {
             ->name('admin.time-logs.analytics');
         Route::get('admin/time-logs/export', [TimeLogController::class, 'adminExportCSV'])
             ->name('admin.time-logs.export');
+        Route::get('admin/time-logs/report', [TimeLogController::class, 'report'])
+            ->name('admin.time-logs.report');
+        Route::get('admin/team-productivity', [TimeLogController::class, 'teamProductivity'])
+            ->name('admin.team-productivity');
         Route::get('admin/projects/{project}/time-logs', [TimeLogController::class, 'projectTimeLogs'])
             ->name('admin.time-logs.project');
         Route::get('admin/users/{user}/time-logs', [TimeLogController::class, 'userTimeLogs'])
             ->name('admin.time-logs.user');
     });
+    
+    // Leader routes
     Route::prefix('leader')->name('leader.')->group(function () {
         Route::get('/dashboard', [LeaderController::class, 'dashboard'])->name('dashboard');
         Route::get('/history', [LeaderController::class, 'history'])->name('history');
         Route::get('/projects/{project}', [LeaderController::class, 'projectDetails'])->name('project.details');
         Route::get('/projects/{project}/monitoring', [LeaderController::class, 'monitoring'])->name('project.monitoring');
+        Route::get('/projects/{project}/members', [LeaderController::class, 'members'])->name('project.members');
         
         // Card management
         Route::get('/projects/{project}/boards/{board}/cards/create', [CardController::class, 'create'])->name('card.create');
@@ -115,6 +120,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/projects/{project}/boards/{board}/cards/{card}/edit', [CardController::class, 'edit'])->name('card.edit');
         Route::put('/projects/{project}/boards/{board}/cards/{card}', [CardController::class, 'update'])->name('card.update');
         Route::delete('/projects/{project}/boards/{board}/cards/{card}', [CardController::class, 'destroy'])->name('card.destroy');
+        Route::post('/projects/{project}/boards/{board}/cards/{card}/mark-done', [CardController::class, 'markAsDone'])->name('card.mark-done');
+        Route::post('/projects/{project}/boards/{board}/cards/{card}/reassign', [CardController::class, 'reassignCard'])->name('card.reassign');
         
         // Subtask management (Leader can only delete)
         Route::delete('/projects/{project}/boards/{board}/cards/{card}/subtasks/{subtask}', [SubtaskController::class, 'destroyLeader'])->name('subtask.destroy');
@@ -145,5 +152,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/projects/{project}/boards/{board}/cards/{card}/subtasks/{subtask}/pause', [MemberSubtaskController::class, 'pauseSubtask'])->name('member.subtask.pause');
         Route::post('/projects/{project}/boards/{board}/cards/{card}/subtasks/{subtask}/resume', [MemberSubtaskController::class, 'resumeSubtask'])->name('member.subtask.resume');
         Route::post('/projects/{project}/boards/{board}/cards/{card}/subtasks/{subtask}/submit', [MemberSubtaskController::class, 'submitSubtask'])->name('member.subtask.submit');
+        
+        // Member request help
+        Route::post('/projects/{project}/boards/{board}/cards/{card}/request-help', [CardController::class, 'requestHelp'])->name('member.card.request-help');
     });
 });

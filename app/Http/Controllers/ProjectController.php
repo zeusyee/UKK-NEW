@@ -61,6 +61,9 @@ class ProjectController extends Controller
     {
         // Prevent updating completed projects
         if ($project->status === 'completed') {
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Cannot update a completed project.'], 400);
+            }
             return redirect()->route('admin.projects.index')
                 ->with('error', 'Cannot update a completed project.');
         }
@@ -77,9 +80,44 @@ class ProjectController extends Controller
             'deadline' => $request->deadline,
         ]);
 
+        // Return JSON for AJAX requests, redirect for form submissions
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'project' => $project,
+                'message' => 'Project updated successfully.'
+            ]);
+        }
+
         return redirect()->route('admin.projects.index')
             ->with('success', 'Project updated successfully.');
     }
+
+    public function updateAjax(Request $request, Project $project)
+{
+    // Prevent updating completed projects
+    if ($project->status === 'completed') {
+        return response()->json(['error' => 'Cannot update a completed project.'], 400);
+    }
+    
+    $request->validate([
+        'project_name' => 'required|string|max:100',
+        'description' => 'nullable|string',
+        'deadline' => 'nullable|date',
+    ]);
+
+    $project->update([
+        'project_name' => $request->project_name,
+        'description' => $request->description,
+        'deadline' => $request->deadline,
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'project' => $project,
+        'message' => 'Project updated successfully.'
+    ]);
+}
 
     public function destroy(Project $project)
     {
@@ -97,7 +135,20 @@ class ProjectController extends Controller
     public function show(Project $project)
     {
         $project->load(['creator', 'members.user', 'boards', 'completedBy']);
-        return view('admin.projects.show', compact('project'));
+        
+        // Get all cards in this project across all boards
+        $totalCards = \App\Models\Card::whereHas('board', function($query) use ($project) {
+            $query->where('project_id', $project->project_id);
+        })->count();
+        
+        $completedCards = \App\Models\Card::whereHas('board', function($query) use ($project) {
+            $query->where('project_id', $project->project_id);
+        })->where('status', 'done')->count();
+        
+        // Check if all cards are completed (or no cards exist)
+        $allCardsCompleted = $totalCards > 0 && $totalCards === $completedCards;
+        
+        return view('admin.projects.show', compact('project', 'totalCards', 'completedCards', 'allCardsCompleted'));
     }
 
     public function members(Project $project)

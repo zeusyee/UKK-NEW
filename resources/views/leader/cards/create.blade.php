@@ -81,13 +81,14 @@
                 <!-- Due Date -->
                 <div>
                     <label for="due_date" class="block text-sm font-medium text-gray-700 mb-2">
-                        Due Date
+                        Due Date <span class="text-red-500">*</span>
                     </label>
                     <input type="date" 
                            id="due_date" 
                            name="due_date" 
                            value="{{ old('due_date') }}"
                            min="{{ date('Y-m-d') }}"
+                           required
                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
                     @error('due_date')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -132,7 +133,7 @@
                 <!-- Assign To Member -->
                 <div class="md:col-span-2">
                     <label class="block text-sm font-medium text-gray-700 mb-3">
-                        <i class="fas fa-user mr-2"></i>Assign To Team Member
+                        <i class="fas fa-user mr-2"></i>Assign To Team Member <span class="text-red-500">*</span>
                     </label>
                     @if($projectMembers->isEmpty())
                         <p class="text-red-500 text-sm">
@@ -140,38 +141,26 @@
                             No available team members in this project.
                         </p>
                     @else
+                        @php
+                            // Get pre-selected user from query parameter
+                            $preSelectedUserId = request()->query('assigned_user_id', old('assigned_user_id'));
+                        @endphp
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-3 max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-4 bg-gray-50">
-                            <!-- Option to not assign -->
-                            <label class="flex items-center space-x-3 cursor-pointer hover:bg-white p-3 rounded-lg transition-colors border border-transparent hover:border-gray-200">
-                                <input type="radio" 
-                                       name="assigned_user_id" 
-                                       value=""
-                                       {{ old('assigned_user_id') == '' ? 'checked' : '' }}
-                                       class="text-gray-500 focus:ring-gray-500">
-                                <div class="flex items-center space-x-2">
-                                    <div class="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
-                                        <i class="fas fa-user-slash"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm font-medium text-gray-800">Not Assigned</p>
-                                        <p class="text-xs text-gray-500">Assign later</p>
-                                    </div>
-                                </div>
-                            </label>
-                            
                             @foreach($projectMembers as $member)
                                 @php
                                     $isAssigned = in_array($member->user_id, $assignedUserIds);
+                                    $isPreSelected = $preSelectedUserId == $member->user_id;
                                 @endphp
-                                <label class="flex items-center space-x-3 p-3 rounded-lg transition-colors border border-transparent {{ $isAssigned ? 'opacity-50 cursor-not-allowed bg-gray-100' : 'cursor-pointer hover:bg-white hover:border-green-200' }}">
+                                <label class="flex items-center space-x-3 p-3 rounded-lg transition-colors border {{ $isPreSelected ? 'border-green-400 bg-green-50' : 'border-transparent' }} {{ $isAssigned ? 'opacity-50 cursor-not-allowed bg-gray-100' : 'cursor-pointer hover:bg-white hover:border-green-200' }}">
                                     <input type="radio" 
                                            name="assigned_user_id" 
                                            value="{{ $member->user_id }}"
-                                           {{ old('assigned_user_id') == $member->user_id ? 'checked' : '' }}
+                                           {{ $isPreSelected ? 'checked' : '' }}
                                            {{ $isAssigned ? 'disabled' : '' }}
-                                           class="text-green-500 focus:ring-green-500 {{ $isAssigned ? 'cursor-not-allowed' : '' }}">
+                                           class="text-green-500 focus:ring-green-500 {{ $isAssigned ? 'cursor-not-allowed' : '' }}"
+                                           required>
                                     <div class="flex items-center space-x-2 flex-1">
-                                        <div class="h-8 w-8 rounded-full {{ $isAssigned ? 'bg-gray-400' : 'bg-blue-500' }} flex items-center justify-center text-white font-semibold text-sm">
+                                        <div class="h-8 w-8 rounded-full {{ $isAssigned ? 'bg-gray-400' : ($isPreSelected ? 'bg-green-500' : 'bg-blue-500') }} flex items-center justify-center text-white font-semibold text-sm">
                                             {{ strtoupper(substr($member->user->full_name, 0, 1)) }}
                                         </div>
                                         <div class="flex-1">
@@ -180,6 +169,11 @@
                                                 @if($isAssigned)
                                                     <span class="ml-2 text-xs text-red-500 font-normal">
                                                         <i class="fas fa-lock"></i> Already Assigned
+                                                    </span>
+                                                @endif
+                                                @if($isPreSelected && !$isAssigned)
+                                                    <span class="ml-2 text-xs text-green-600 font-semibold">
+                                                        <i class="fas fa-check-circle"></i> Selected
                                                     </span>
                                                 @endif
                                             </p>
@@ -191,7 +185,7 @@
                         </div>
                         <p class="text-xs text-gray-500 mt-2">
                             <i class="fas fa-info-circle mr-1"></i>
-                            The assigned member can create subtasks for this card. Members can only be assigned to one card at a time.
+                            You must assign a member. The assigned member can create subtasks for this card. Members can only be assigned to one card at a time.
                         </p>
                     @endif
                     @error('assigned_user_id')

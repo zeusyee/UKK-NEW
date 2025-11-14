@@ -7,8 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class Card extends Model
 {
     protected $primaryKey = 'card_id';
-    public $keyType = 'string';
-    public $incrementing = false;
+    public $keyType = 'int';
+    public $incrementing = true;
 
     public function getRouteKeyName()
     {
@@ -26,7 +26,10 @@ class Card extends Model
         'status',
         'priority',
         'estimated_hours',
-        'actual_hours'
+        'actual_hours',
+        'help_requested',
+        'help_requested_at',
+        'help_message'
     ];
 
     protected $casts = [
@@ -36,7 +39,9 @@ class Card extends Model
         'priority' => 'string',
         'estimated_hours' => 'decimal:2',
         'actual_hours' => 'decimal:2',
-        'position' => 'integer'
+        'position' => 'integer',
+        'help_requested' => 'boolean',
+        'help_requested_at' => 'datetime'
     ];
 
     // Relationships
@@ -100,49 +105,6 @@ class Card extends Model
     public function getAssignmentHistory()
     {
         return $this->cardAssignments()->orderBy('assigned_at', 'desc')->get();
-    }
-
-    /**
-     * Check and update card completion status based on subtasks
-     */
-    public function checkAndUpdateCompletion()
-    {
-        $subtasks = $this->subtasks;
-
-        // If no subtasks exist, do nothing
-        if ($subtasks->isEmpty()) {
-            return;
-        }
-
-        // Check if all subtasks are done
-        $allDone = $subtasks->every(function ($subtask) {
-            return $subtask->status === 'done';
-        });
-
-        // Check if any subtask is in progress
-        $anyInProgress = $subtasks->contains(function ($subtask) {
-            return $subtask->status === 'in_progress';
-        });
-
-        // Update card status
-        if ($allDone) {
-            $this->status = 'done';
-        } elseif ($anyInProgress) {
-            $this->status = 'in_progress';
-        } else {
-            // If none are in progress and not all are done, keep as todo
-            $anyStarted = $subtasks->contains(function ($subtask) {
-                return in_array($subtask->status, ['in_progress', 'review', 'done']);
-            });
-            
-            if ($anyStarted) {
-                $this->status = 'in_progress';
-            } else {
-                $this->status = 'todo';
-            }
-        }
-
-        $this->save();
     }
 
     /**

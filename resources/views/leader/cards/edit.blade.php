@@ -82,13 +82,14 @@
                 <!-- Due Date -->
                 <div>
                     <label for="due_date" class="block text-sm font-medium text-gray-700 mb-2">
-                        Due Date
+                        Due Date <span class="text-red-500">*</span>
                     </label>
                     <input type="date" 
                            id="due_date" 
                            name="due_date" 
                            value="{{ old('due_date', $card->due_date ? $card->due_date->format('Y-m-d') : '') }}"
                            min="{{ date('Y-m-d') }}"
+                           required
                            class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
                     @error('due_date')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -145,22 +146,7 @@
                     @else
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-3 max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-4 bg-gray-50">
                             <!-- Option to unassign -->
-                            <label class="flex items-center space-x-3 cursor-pointer hover:bg-white p-3 rounded-lg transition-colors border border-transparent hover:border-red-200">
-                                <input type="radio" 
-                                       name="assigned_user_id" 
-                                       value=""
-                                       {{ old('assigned_user_id', $card->assigned_user_id) == '' ? 'checked' : '' }}
-                                       class="text-red-500 focus:ring-red-500">
-                                <div class="flex items-center space-x-2">
-                                    <div class="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center text-red-600">
-                                        <i class="fas fa-times"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm font-medium text-gray-800">Unassign</p>
-                                        <p class="text-xs text-gray-500">Remove assignment</p>
-                                    </div>
-                                </div>
-                            </label>
+
                             
                             @foreach($projectMembers as $member)
                                 @php

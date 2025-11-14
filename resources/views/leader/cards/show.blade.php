@@ -9,6 +9,77 @@
         </a>
     </div>
 
+    <!-- Help Request Alert -->
+    @if($card->help_requested)
+        <div class="bg-red-50 border-l-4 border-red-500 p-6 mb-6 rounded-lg shadow-md">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+                </div>
+                <div class="ml-4 flex-1">
+                    <h3 class="text-lg font-bold text-red-800 mb-2">
+                        <i class="fas fa-hand-paper mr-2"></i>Help Requested!
+                    </h3>
+                    <p class="text-red-700 mb-2">
+                        <strong>{{ $card->assignedUser->full_name }}</strong> is requesting help with this card.
+                    </p>
+                    <div class="bg-white p-3 rounded border border-red-200 mb-3">
+                        <p class="text-sm text-gray-800"><i class="fas fa-comment mr-2"></i>{{ $card->help_message }}</p>
+                    </div>
+                    <p class="text-xs text-red-600">
+                        <i class="fas fa-clock mr-1"></i>Requested {{ $card->help_requested_at->diffForHumans() }}
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Reassign Card Form -->
+            <div class="mt-4 pt-4 border-t border-red-200">
+                <h4 class="text-md font-bold text-red-800 mb-3">
+                    <i class="fas fa-user-friends mr-2"></i>Reassign Card to Another Member
+                </h4>
+                <form action="{{ route('leader.card.reassign', ['project' => $project, 'board' => $board, 'card' => $card]) }}" 
+                      method="POST" 
+                      class="flex items-end gap-3">
+                    @csrf
+                    <div class="flex-1">
+                        <label for="new_assigned_user_id" class="block text-sm font-medium text-gray-700 mb-2">
+                            Select New Member
+                        </label>
+                        <select name="new_assigned_user_id" 
+                                id="new_assigned_user_id" 
+                                required
+                                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
+                            <option value="">Choose a member...</option>
+                            @foreach($projectMembers as $member)
+                                @php
+                                    $hasActiveCard = \App\Models\Card::whereHas('board', function($query) use ($project) {
+                                        $query->where('project_id', $project->project_id);
+                                    })
+                                    ->where('assigned_user_id', $member->user_id)
+                                    ->where('status', '!=', 'done')
+                                    ->where('card_id', '!=', $card->card_id)
+                                    ->exists();
+                                @endphp
+                                @if(!$hasActiveCard && $member->user_id !== $card->assigned_user_id)
+                                    <option value="{{ $member->user_id }}">
+                                        {{ $member->user->full_name }} ({{ $member->user->email }})
+                                    </option>
+                                @endif
+                            @endforeach
+                        </select>
+                    </div>
+                    <button type="submit" 
+                            class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-exchange-alt mr-2"></i>Reassign
+                    </button>
+                </form>
+                <p class="text-xs text-gray-600 mt-2">
+                    <i class="fas fa-info-circle mr-1"></i>Only members without active cards or with completed cards can be selected
+                </p>
+            </div>
+        </div>
+    @endif
+
     <!-- Card Header -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-6">
         <div class="flex justify-between items-start mb-4">
@@ -81,6 +152,30 @@
                 @endif
             </div>
             <div class="flex space-x-2">
+                @php
+                    $allSubtasksDone = $card->subtasks->isNotEmpty() && $card->subtasks->every(fn($s) => $s->status === 'done');
+                    $canMarkAsDone = $allSubtasksDone && $card->status !== 'done';
+                    $isCardDone = $card->status === 'done';
+                @endphp
+                
+                @if($canMarkAsDone)
+                    <form action="{{ route('leader.card.mark-done', ['project' => $project, 'board' => $board, 'card' => $card]) }}" 
+                          method="POST" 
+                          onsubmit="return confirm('Mark this card as completed? All subtasks are done.')">
+                        @csrf
+                        <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-semibold">
+                            <i class="fas fa-check-circle mr-1"></i>Mark as Done
+                        </button>
+                    </form>
+                @endif
+                
+                @if($isCardDone && $card->assigned_user_id)
+                    <a href="{{ route('leader.card.create', ['project' => $project, 'board' => $board]) }}?assigned_user_id={{ $card->assigned_user_id }}" 
+                       class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded font-semibold">
+                        <i class="fas fa-plus-circle mr-1"></i>Add New Card for This Member
+                    </a>
+                @endif
+                
                 <a href="{{ route('leader.card.edit', ['project' => $project, 'board' => $board, 'card' => $card]) }}" 
                    class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
                     <i class="fas fa-edit mr-1"></i>Edit Card

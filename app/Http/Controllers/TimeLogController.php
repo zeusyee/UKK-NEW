@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Http\Controllers;
 
@@ -23,10 +23,11 @@ class TimeLogController extends Controller
             }),
             'total_sessions' => TimeLog::count(),
             'total_users' => TimeLog::distinct('user_id')->count(),
-            'total_projects' => TimeLog::whereNotNull('card_id')
+            'total_projects' => TimeLog::whereNotNull('time_logs.card_id')
                 ->join('cards', 'time_logs.card_id', '=', 'cards.card_id')
                 ->join('boards', 'cards.board_id', '=', 'boards.board_id')
-                ->distinct('boards.project_id')
+                ->select('boards.project_id')
+                ->distinct()
                 ->count()
         ];
 
@@ -77,26 +78,30 @@ class TimeLogController extends Controller
                 });
             
             if ($duration > 0) {
-                $timeByUser[$user->name] = $duration;
+                $timeByUser[$user->full_name] = $duration;
             }
         }
         
         $timeByProject = [];
-        $projects = Project::whereHas('cards.timeLogs', function($query) use ($startDate) {
+        $projects = Project::whereHas('boards.cards.timeLogs', function($query) use ($startDate) {
             $query->where('start_time', '>=', $startDate);
         })->get();
         
         foreach ($projects as $project) {
-            $duration = $project->cards()
-                ->join('time_logs', 'cards.card_id', '=', 'time_logs.card_id')
-                ->where('time_logs.start_time', '>=', $startDate)
-                ->selectRaw('time_logs.*')
-                ->get()
-                ->sum(function($log) {
-                    return $log->end_time 
-                        ? $log->end_time->diffInMinutes($log->start_time) 
-                        : 0;
-                });
+            $duration = 0;
+            foreach ($project->boards as $board) {
+                foreach ($board->cards as $card) {
+                    $cardLogs = $card->timeLogs()
+                        ->where('start_time', '>=', $startDate)
+                        ->get();
+                    
+                    foreach ($cardLogs as $log) {
+                        $duration += $log->end_time 
+                            ? $log->end_time->diffInMinutes($log->start_time) 
+                            : 0;
+                    }
+                }
+            }
             
             if ($duration > 0) {
                 $timeByProject[$project->project_name] = $duration;
@@ -174,10 +179,11 @@ class TimeLogController extends Controller
             }),
             'total_sessions' => $timeLogs->total(),
             'projects_involved' => TimeLog::where('user_id', $user->user_id)
-                ->whereNotNull('card_id')
+                ->whereNotNull('time_logs.card_id')
                 ->join('cards', 'time_logs.card_id', '=', 'cards.card_id')
                 ->join('boards', 'cards.board_id', '=', 'boards.board_id')
-                ->distinct('boards.project_id')
+                ->select('boards.project_id')
+                ->distinct()
                 ->count()
         ];
 
@@ -196,5 +202,97 @@ class TimeLogController extends Controller
             default:
                 return now()->startOfWeek();
         }
+    }
+
+    public function report(Request $request)
+    {
+        $query = TimeLog::with(['card.board.project', 'subtask', 'user']);
+
+        if (request('user_id')) {
+            $query->where('user_id', request('user_id'));
+        }
+
+        if (request('project_id')) {
+            $query->whereHas('card.board', function($q) {
+                $q->where('project_id', request('project_id'));
+            });
+        }
+
+        if (request('start_date')) {
+            $query->whereDate('start_time', '>=', request('start_date'));
+        }
+
+        if (request('end_date')) {
+            $query->whereDate('start_time', '<=', request('end_date'));
+        }
+
+        $timeLogs = $query->orderBy('start_time', 'desc')->paginate(20);
+
+        $totalHours = $timeLogs->getCollection()->sum(function($log) {
+            return $log->end_time ? $log->end_time->diffInMinutes($log->start_time) / 60 : 0;
+        });
+
+        $totalSessions = $timeLogs->total();
+        $avgHours = $totalSessions > 0 ? $totalHours / $totalSessions : 0;
+        $activeUsers = $timeLogs->getCollection()->pluck('user_id')->unique()->count();
+
+        return view('admin.time-logs.report', compact('timeLogs', 'totalHours', 'totalSessions', 'avgHours', 'activeUsers'));
+    }
+
+    public function teamProductivity(Request $request)
+    {
+        $period = $request->get('period', 'week');
+        $startDate = $this->getStartDate($period);
+
+        $timeLogs = TimeLog::where('start_time', '>=', $startDate)
+            ->with(['card.board.project', 'subtask', 'user'])
+            ->get();
+
+        $totalHours = $timeLogs->sum(function($log) {
+            return $log->end_time ? $log->end_time->diffInMinutes($log->start_time) / 60 : 0;
+        });
+
+        $totalSessions = $timeLogs->count();
+        $activeUsers = $timeLogs->pluck('user_id')->unique()->count();
+        $avgHoursPerUser = $activeUsers > 0 ? $totalHours / $activeUsers : 0;
+
+        $userStats = $timeLogs->groupBy('user_id')
+            ->map(function($logs) {
+                $totalMinutes = $logs->sum(function($log) {
+                    return $log->end_time ? $log->end_time->diffInMinutes($log->start_time) : 0;
+                });
+                return (object)[
+                    'user' => $logs->first()->user,
+                    'total_hours' => $totalMinutes / 60,
+                    'sessions' => $logs->count(),
+                    'avg_hours' => $logs->count() > 0 ? ($totalMinutes / 60) / $logs->count() : 0
+                ];
+            })
+            ->sortByDesc('total_hours');
+
+        $projectStats = $timeLogs->filter(fn($log) => $log->card)
+            ->groupBy(fn($log) => $log->card->board->project_id)
+            ->map(function($logs) {
+                $totalMinutes = $logs->sum(function($log) {
+                    return $log->end_time ? $log->end_time->diffInMinutes($log->start_time) : 0;
+                });
+                return (object)[
+                    'project' => $logs->first()->card->board->project,
+                    'total_hours' => $totalMinutes / 60,
+                    'sessions' => $logs->count(),
+                    'members' => $logs->pluck('user_id')->unique()->count()
+                ];
+            })
+            ->sortByDesc('total_hours')
+            ->take(10);
+
+        $stats = [
+            'total_hours' => $totalHours,
+            'total_sessions' => $totalSessions,
+            'active_users' => $activeUsers,
+            'avg_hours_per_user' => $avgHoursPerUser
+        ];
+
+        return view('admin.team-productivity', compact('stats', 'userStats', 'projectStats', 'period'));
     }
 }

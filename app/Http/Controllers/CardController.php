@@ -36,11 +36,13 @@ class CardController extends Controller
             ->where('role', 'member')
             ->get();
         
-        // Get IDs of members who are already assigned to cards in this project
+        // Get IDs of members who are already assigned to cards that are NOT done yet
+        // If a card is done, the member is available for a new assignment
         $assignedUserIds = Card::whereHas('board', function($query) use ($project) {
             $query->where('project_id', $project->project_id);
         })
         ->whereNotNull('assigned_user_id')
+        ->where('status', '!=', 'done') // Only consider cards that are not done
         ->pluck('assigned_user_id')
         ->toArray();
         
@@ -54,11 +56,11 @@ class CardController extends Controller
         $validated = $request->validate([
             'card_title' => 'required|string|max:100',
             'description' => 'nullable|string',
-            'due_date' => 'nullable|date',
+            'due_date' => 'required|date|after_or_equal:today',
             'priority' => 'required|in:low,medium,high',
             'estimated_hours' => 'nullable|numeric|min:0|max:9999',
             'position' => 'nullable|integer|min:0',
-            'assigned_user_id' => 'nullable|exists:users,user_id'
+            'assigned_user_id' => 'required|exists:users,user_id'
         ]);
 
         // Verify that assigned user is a member of the project
@@ -72,11 +74,13 @@ class CardController extends Controller
                 return back()->with('error', 'The selected user is not a member of this project.');
             }
 
-            // Check if member is already assigned to another card in this project
+            // Check if member is already assigned to another active card in this project
+            // Cards with status 'done' are completed, so member is available again
             $isAlreadyAssigned = Card::whereHas('board', function($query) use ($project) {
                 $query->where('project_id', $project->project_id);
             })
             ->where('assigned_user_id', $request->assigned_user_id)
+            ->where('status', '!=', 'done') // Only check for cards that are not done
             ->exists();
 
             if ($isAlreadyAssigned) {
@@ -154,7 +158,7 @@ class CardController extends Controller
         $validated = $request->validate([
             'card_title' => 'required|string|max:100',
             'description' => 'nullable|string',
-            'due_date' => 'nullable|date',
+            'due_date' => 'required|date|after_or_equal:today',
             'priority' => 'required|in:low,medium,high',
             'estimated_hours' => 'nullable|numeric|min:0|max:9999',
             'actual_hours' => 'nullable|numeric|min:0|max:9999',
@@ -211,5 +215,116 @@ class CardController extends Controller
         return redirect()
             ->route('leader.project.details', $project)
             ->with('success', 'Card deleted successfully!');
+    }
+
+    public function markAsDone(Project $project, Board $board, Card $card)
+    {
+        $this->checkLeaderAccess($project->project_id);
+        
+        // Load subtasks
+        $card->load('subtasks');
+        
+        // Check if card has subtasks
+        if ($card->subtasks->isEmpty()) {
+            return back()->with('error', 'Cannot mark card as done. No subtasks found.');
+        }
+        
+        // Check if all subtasks are done
+        $allDone = $card->subtasks->every(function ($subtask) {
+            return $subtask->status === 'done';
+        });
+        
+        if (!$allDone) {
+            return back()->with('error', 'Cannot mark card as done. Not all subtasks are completed yet.');
+        }
+        
+        // Check if card is already done
+        if ($card->status === 'done') {
+            return back()->with('info', 'This card is already marked as done.');
+        }
+        
+        // Update card status to done
+        $card->update([
+            'status' => 'done'
+        ]);
+        
+        return redirect()
+            ->route('leader.card.show', ['project' => $project, 'board' => $board, 'card' => $card])
+            ->with('success', 'Card marked as completed successfully! 🎉');
+    }
+
+    public function requestHelp(Request $request, Project $project, Board $board, Card $card)
+    {
+        // Check if user is the assigned member of this card or is a member of the project
+        $userId = Auth::id();
+        
+        // Verify user is a member of the project
+        $isMember = ProjectMember::where('project_id', $project->project_id)
+            ->where('user_id', $userId)
+            ->exists();
+        
+        if (!$isMember) {
+            abort(403, 'You are not a member of this project.');
+        }
+        
+        // Verify user is assigned to this card
+        if ($card->assigned_user_id !== $userId) {
+            abort(403, 'You are not assigned to this card.');
+        }
+        
+        $validated = $request->validate([
+            'help_message' => 'required|string|max:500'
+        ]);
+        
+        $card->update([
+            'help_requested' => true,
+            'help_requested_at' => now(),
+            'help_message' => $validated['help_message']
+        ]);
+        
+        return back()->with('success', 'Help request sent to leader successfully!');
+    }
+
+    public function reassignCard(Request $request, Project $project, Board $board, Card $card)
+    {
+        $this->checkLeaderAccess($project->project_id);
+        
+        $validated = $request->validate([
+            'new_assigned_user_id' => 'required|exists:users,user_id'
+        ]);
+        
+        // Verify that new assigned user is a member of the project
+        $isMember = ProjectMember::where('project_id', $project->project_id)
+            ->where('user_id', $validated['new_assigned_user_id'])
+            ->where('role', 'member')
+            ->exists();
+
+        if (!$isMember) {
+            return back()->with('error', 'The selected user is not a member of this project.');
+        }
+        
+        // Check if new member is already assigned to another active card
+        $isAlreadyAssigned = Card::whereHas('board', function($query) use ($project) {
+            $query->where('project_id', $project->project_id);
+        })
+        ->where('assigned_user_id', $validated['new_assigned_user_id'])
+        ->where('status', '!=', 'done')
+        ->where('card_id', '!=', $card->card_id)
+        ->exists();
+
+        if ($isAlreadyAssigned) {
+            return back()->with('error', 'This member is already assigned to another active card.');
+        }
+        
+        $oldAssignedUser = $card->assignedUser;
+        
+        $card->update([
+            'assigned_user_id' => $validated['new_assigned_user_id'],
+            'help_requested' => false,
+            'help_requested_at' => null,
+            'help_message' => null
+        ]);
+        
+        return back()->with('success', "Card reassigned from {$oldAssignedUser->full_name} successfully!");
     }
 }

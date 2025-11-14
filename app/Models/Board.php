@@ -7,8 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class Board extends Model
 {
     protected $primaryKey = 'board_id';
-    public $keyType = 'string';
-    public $incrementing = false;
+    public $keyType = 'int';
+    public $incrementing = true;
 
     public function getRouteKeyName()
     {

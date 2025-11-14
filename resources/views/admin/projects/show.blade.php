@@ -15,6 +15,12 @@
         </div>
         @endif
 
+        <div class="mb-6">
+            <a href="{{ route('admin.projects.index') }}" class="text-primary hover:opacity-80 inline-flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Projects
+            </a>
+        </div>
+
         <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
             <div class="px-4 py-5 sm:px-6">
                 <div class="flex items-center justify-between">
@@ -26,7 +32,7 @@
                             Created by {{ $project->creator->full_name }}
                         </p>
                     </div>
-                    <div>
+                    <div class="flex items-center space-x-3">
                         @if($project->status === 'completed')
                             <span class="px-4 py-2 inline-flex text-sm leading-5 font-semibold rounded-lg panel-bg" style="border:1px solid rgba(30,64,175,0.08); color:var(--primary)">
                                 <i class="fas fa-check-circle mr-2"></i> Completed
@@ -35,6 +41,24 @@
                             <span class="px-4 py-2 inline-flex text-sm leading-5 font-semibold rounded-lg panel-bg" style="border:1px solid rgba(30,64,175,0.04); color:var(--primary)">
                                 <i class="fas fa-play-circle mr-2"></i> Active
                             </span>
+                            @if($allCardsCompleted)
+                                <form action="{{ route('admin.projects.complete', $project) }}" 
+                                      method="POST" 
+                                      onsubmit="return confirm('Are you sure you want to mark this project as completed? All cards have been finished. This action cannot be undone.')">
+                                    @csrf
+                                    <button type="submit" 
+                                            class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors animate-pulse">
+                                        <i class="fas fa-check-double mr-2"></i>Complete Project
+                                    </button>
+                                </form>
+                            @else
+                                <div class="px-4 py-2 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                    <p class="text-sm text-yellow-800 flex items-center">
+                                        <i class="fas fa-info-circle mr-2"></i>
+                                        <span>{{ $completedCards }}/{{ $totalCards }} cards completed</span>
+                                    </p>
+                                </div>
+                            @endif
                         @endif
                     </div>
                 </div>

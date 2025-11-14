@@ -79,6 +79,45 @@
             </div>
         @endif
 
+        <!-- Request Help Section -->
+        <div class="mt-6 p-4 border-2 border-dashed rounded-lg {{ $card->help_requested ? 'bg-yellow-50 border-yellow-400' : 'bg-gray-50 border-gray-300' }}">
+            @if($card->help_requested)
+                <div class="flex items-start">
+                    <i class="fas fa-hourglass-half text-yellow-600 text-2xl mr-3 mt-1"></i>
+                    <div class="flex-1">
+                        <h3 class="font-bold text-yellow-800 mb-2">
+                            <i class="fas fa-paper-plane mr-2"></i>Help Request Sent
+                        </h3>
+                        <p class="text-yellow-700 text-sm mb-2">Your help request has been sent to the leader.</p>
+                        <div class="bg-white p-3 rounded border border-yellow-200">
+                            <p class="text-sm text-gray-700"><strong>Your message:</strong></p>
+                            <p class="text-sm text-gray-600 mt-1">{{ $card->help_message }}</p>
+                        </div>
+                        <p class="text-xs text-yellow-600 mt-2">
+                            <i class="fas fa-clock mr-1"></i>Sent {{ $card->help_requested_at->diffForHumans() }}
+                        </p>
+                    </div>
+                </div>
+            @else
+                <div class="flex items-start">
+                    <i class="fas fa-hand-paper text-gray-600 text-2xl mr-3 mt-1"></i>
+                    <div class="flex-1">
+                        <h3 class="font-bold text-gray-800 mb-2">
+                            <i class="fas fa-question-circle mr-2"></i>Need Help?
+                        </h3>
+                        <p class="text-gray-600 text-sm mb-3">
+                            If you're having trouble with this task, you can request help from your leader.
+                        </p>
+                        <button type="button" 
+                                onclick="document.getElementById('helpRequestModal').classList.remove('hidden')"
+                                class="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-4 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-hand-paper mr-2"></i>Request Help
+                        </button>
+                    </div>
+                </div>
+            @endif
+        </div>
+
         <!-- Task Meta Information -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
             <div class="bg-gray-50 p-3 rounded">
@@ -801,4 +840,56 @@
             @endforeach
         });
     </script>
+
+    <!-- Help Request Modal -->
+    <div id="helpRequestModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 shadow-lg rounded-lg bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800">
+                    <i class="fas fa-hand-paper mr-2 text-orange-500"></i>Request Help from Leader
+                </h3>
+                <button onclick="document.getElementById('helpRequestModal').classList.add('hidden')" 
+                        class="text-gray-600 hover:text-gray-800">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            
+            <form action="{{ route('member.card.request-help', ['project' => $project, 'board' => $board, 'card' => $card]) }}" 
+                  method="POST">
+                @csrf
+                <div class="mb-4">
+                    <label for="help_message" class="block text-sm font-medium text-gray-700 mb-2">
+                        Describe the problem you're facing <span class="text-red-500">*</span>
+                    </label>
+                    <textarea id="help_message" 
+                              name="help_message" 
+                              rows="5" 
+                              required
+                              maxlength="500"
+                              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                              placeholder="Explain what difficulties you're experiencing with this task..."></textarea>
+                    <p class="text-xs text-gray-500 mt-1">Maximum 500 characters</p>
+                </div>
+                
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+                    <p class="text-sm text-yellow-700">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Your leader will be notified and may reassign this card to another team member if needed.
+                    </p>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <button type="button" 
+                            onclick="document.getElementById('helpRequestModal').classList.add('hidden')"
+                            class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-6 rounded-lg">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-6 rounded-lg">
+                        <i class="fas fa-paper-plane mr-2"></i>Send Request
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 @endsection
