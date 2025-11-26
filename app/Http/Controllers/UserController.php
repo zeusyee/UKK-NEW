@@ -120,13 +120,35 @@ class UserController extends Controller
                 ], 403);
             }
 
-            if ($user->projectMemberships()->exists()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Cannot delete user with active project memberships'
-                ], 422);
-            }
+            // Delete all related records before deleting user
+            // 1. Delete project memberships
+            $user->projectMemberships()->delete();
+            
+            // 2. Delete card assignments
+            $user->cardAssignments()->delete();
+            
+            // 3. Delete comments
+            $user->comments()->delete();
+            
+            // 4. Delete time logs
+            $user->timeLogs()->delete();
+            
+            // 5. Update any cards assigned to this user (set to null)
+            \App\Models\Card::where('assigned_user_id', $user->user_id)
+                ->update(['assigned_user_id' => null]);
+            
+            // 6. Update any subtasks assigned to this user (set to null)
+            \App\Models\Subtask::where('assigned_user_id', $user->user_id)
+                ->update(['assigned_user_id' => null]);
+            
+            // 7. Update any subtasks created by this user (keep created_by for history)
+            // No action needed - we'll keep the created_by reference
+            
+            // 8. Update any projects created by this user (set to null or keep for history)
+            \App\Models\Project::where('created_by', $user->user_id)
+                ->update(['created_by' => null]);
 
+            // Now delete the user
             $user->delete();
 
             return response()->json([

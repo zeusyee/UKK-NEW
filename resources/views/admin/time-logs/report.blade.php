@@ -69,53 +69,39 @@
                 <a href="{{ route('admin.time-logs.report') }}" class="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition">
                     <i class="fas fa-redo mr-2"></i>Reset
                 </a>
+                @if($timeLogs->count() > 0)
+                <button type="button" onclick="window.print()" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                    <i class="fas fa-print mr-2"></i>Print
+                </button>
+                <a href="{{ route('admin.time-logs.report', array_merge(request()->all(), ['print' => '1'])) }}" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                    <i class="fas fa-file-pdf mr-2"></i>Download PDF
+                </a>
+                @endif
             </div>
         </form>
     </div>
 
-    <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <!-- Total Hours Card -->
-        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-md p-6 text-white">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium opacity-90">Total Hours</p>
-                    <p class="text-3xl font-bold">{{ number_format($totalHours, 2) }}</p>
-                </div>
-                <i class="fas fa-clock text-4xl opacity-20"></i>
+    <!-- Summary Statistics -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">
+            <i class="fas fa-chart-line mr-2 text-blue-600"></i>Summary Statistics
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="border-l-4 border-blue-500 pl-4">
+                <p class="text-sm text-gray-600 mb-1">Total Hours</p>
+                <p class="text-2xl font-bold text-gray-900">{{ number_format($totalHours, 2) }}</p>
             </div>
-        </div>
-
-        <!-- Sessions Card -->
-        <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-md p-6 text-white">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium opacity-90">Total Sessions</p>
-                    <p class="text-3xl font-bold">{{ $totalSessions }}</p>
-                </div>
-                <i class="fas fa-list text-4xl opacity-20"></i>
+            <div class="border-l-4 border-green-500 pl-4">
+                <p class="text-sm text-gray-600 mb-1">Total Sessions</p>
+                <p class="text-2xl font-bold text-gray-900">{{ $totalSessions }}</p>
             </div>
-        </div>
-
-        <!-- Average Hours Card -->
-        <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-md p-6 text-white">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium opacity-90">Avg Hours/Session</p>
-                    <p class="text-3xl font-bold">{{ number_format($avgHours, 2) }}</p>
-                </div>
-                <i class="fas fa-chart-bar text-4xl opacity-20"></i>
+            <div class="border-l-4 border-orange-500 pl-4">
+                <p class="text-sm text-gray-600 mb-1">Avg Hours/Session</p>
+                <p class="text-2xl font-bold text-gray-900">{{ number_format($avgHours, 2) }}</p>
             </div>
-        </div>
-
-        <!-- Active Users Card -->
-        <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-md p-6 text-white">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium opacity-90">Active Users</p>
-                    <p class="text-3xl font-bold">{{ $activeUsers }}</p>
-                </div>
-                <i class="fas fa-users text-4xl opacity-20"></i>
+            <div class="border-l-4 border-purple-500 pl-4">
+                <p class="text-sm text-gray-600 mb-1">Active Users</p>
+                <p class="text-2xl font-bold text-gray-900">{{ $activeUsers }}</p>
             </div>
         </div>
     </div>

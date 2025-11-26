@@ -30,6 +30,17 @@
                         <i class="fas fa-clock mr-1"></i>Requested {{ $card->help_requested_at->diffForHumans() }}
                     </p>
                 </div>
+                <div class="ml-4">
+                    <form action="{{ route('leader.card.cancel-help', ['project' => $project, 'board' => $board, 'card' => $card]) }}" 
+                          method="POST" 
+                          onsubmit="return confirm('Are you sure you want to cancel this help request?');">
+                        @csrf
+                        <button type="submit" 
+                                class="bg-gray-500 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded-lg transition-colors">
+                            <i class="fas fa-times mr-2"></i>Cancel Request
+                        </button>
+                    </form>
+                </div>
             </div>
             
             <!-- Reassign Card Form -->
@@ -403,6 +414,11 @@
                 @endforeach
             </div>
         @endif
+    </div>
+
+    <!-- Comments Section -->
+    <div class="mt-6">
+        <x-comments-section :cardId="$card->card_id" type="card" />
     </div>
 
     <script>

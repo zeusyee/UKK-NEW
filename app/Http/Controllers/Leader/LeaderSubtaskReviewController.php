@@ -8,6 +8,7 @@ use App\Models\Card;
 use App\Models\Board;
 use App\Models\Project;
 use App\Models\ProjectMember;
+use App\Models\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;

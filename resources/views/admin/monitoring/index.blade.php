@@ -193,7 +193,18 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                @if($project->deadline)
+                                @if($project->status === 'completed')
+                                    <div class="flex flex-col">
+                                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 w-fit">
+                                            <i class="fas fa-check-circle mr-1"></i>Completed
+                                        </span>
+                                        @if($project->completed_at)
+                                            <div class="text-xs text-gray-500 mt-1">
+                                                {{ $project->completed_at->format('M d, Y') }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                @elseif($project->deadline)
                                     @php
                                         $daysUntil = (int) floor(now()->diffInDays($project->deadline, false));
                                     @endphp
@@ -224,22 +235,28 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                @php
-                                    $status = 'Active';
-                                    $statusColor = 'green';
-                                    if ($project->deadline) {
-                                        if (now()->isAfter($project->deadline)) {
-                                            $status = 'Overdue';
-                                            $statusColor = 'red';
-                                        } elseif (now()->diffInDays($project->deadline) <= 7) {
-                                            $status = 'Due Soon';
-                                            $statusColor = 'orange';
+                                @if($project->status === 'completed')
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        <i class="fas fa-check-double mr-1"></i>Completed
+                                    </span>
+                                @else
+                                    @php
+                                        $status = 'Active';
+                                        $statusColor = 'green';
+                                        if ($project->deadline) {
+                                            if (now()->isAfter($project->deadline)) {
+                                                $status = 'Overdue';
+                                                $statusColor = 'red';
+                                            } elseif (now()->diffInDays($project->deadline) <= 7) {
+                                                $status = 'Due Soon';
+                                                $statusColor = 'orange';
+                                            }
                                         }
-                                    }
-                                @endphp
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-{{ $statusColor }}-100 text-{{ $statusColor }}-800">
-                                    {{ $status }}
-                                </span>
+                                    @endphp
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-{{ $statusColor }}-100 text-{{ $statusColor }}-800">
+                                        {{ $status }}
+                                    </span>
+                                @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <a href="{{ route('admin.monitoring.project-details', $project->project_id) }}" class="text-blue-600 hover:text-blue-900">

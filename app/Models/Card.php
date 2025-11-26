@@ -163,6 +163,26 @@ class Card extends Model
     }
 
     /**
+     * Check if card is completed
+     */
+    public function isCompleted()
+    {
+        // Card is completed if status is 'done'
+        if ($this->status === 'done') {
+            return true;
+        }
+
+        // Or if all subtasks are done and there is at least one subtask
+        $totalSubtasks = $this->subtasks->count();
+        if ($totalSubtasks > 0) {
+            $completedSubtasks = $this->subtasks->where('status', 'done')->count();
+            return $completedSubtasks === $totalSubtasks;
+        }
+
+        return false;
+    }
+
+    /**
      * Boot the model
      */
     protected static function boot()

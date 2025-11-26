@@ -67,10 +67,10 @@
                 <div class="hidden md:flex items-center gap-4">
                     <a href="#tentang" class="text-gray-600 hover:text-blue-800 font-medium transition">Tentang</a>
                     <a href="#fitur" class="text-gray-600 hover:text-blue-800 font-medium transition">Fitur</a>
-                    <a href="#" class="px-5 py-2 bg-gradient-to-r from-blue-800 to-blue-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all">
+                    <a href="{{ route('login') }}" class="px-5 py-2 bg-gradient-to-r from-blue-800 to-blue-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all">
                         Masuk
                     </a>
-                    <a href="#" class="px-5 py-2 border-2 border-blue-800 text-blue-800 rounded-lg font-semibold hover:bg-blue-50 transition">
+                    <a href="{{ route('register') }}" class="px-5 py-2 border-2 border-blue-800 text-blue-800 rounded-lg font-semibold hover:bg-blue-50 transition">
                         Daftar
                     </a>
                 </div>
@@ -82,10 +82,10 @@
             <div class="px-4 py-4 space-y-3">
                 <a href="#tentang" class="block text-gray-600 hover:text-blue-800 font-medium">Tentang</a>
                 <a href="#fitur" class="block text-gray-600 hover:text-blue-800 font-medium">Fitur</a>
-                <a href="#" class="block text-center px-5 py-2 bg-gradient-to-r from-blue-800 to-blue-600 text-white rounded-lg font-semibold">
+                <a href="{{ route('login') }}" class="block text-center px-5 py-2 bg-gradient-to-r from-blue-800 to-blue-600 text-white rounded-lg font-semibold">
                     Masuk
                 </a>
-                <a href="#" class="block text-center px-5 py-2 border-2 border-blue-800 text-blue-800 rounded-lg font-semibold">
+                <a href="{{ route('register') }}" class="block text-center px-5 py-2 border-2 border-blue-800 text-blue-800 rounded-lg font-semibold">
                     Daftar
                 </a>
             </div>
@@ -113,7 +113,7 @@
                         Platform manajemen proyek modern dirancang untuk menyederhanakan alur kerja Anda, meningkatkan produktivitas tim, dan menyelesaikan proyek tepat waktu.
                     </p>
                     <div class="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center md:justify-start">
-                        <a href="#" class="px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-800 to-blue-600 text-white rounded-xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center gap-2">
+                        <a href="{{ route('register') }}" class="px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-800 to-blue-600 text-white rounded-xl font-bold text-base sm:text-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center gap-2">
                             <i class="fas fa-rocket"></i>
                             Mulai Gratis
                         </a>
@@ -320,11 +320,11 @@
                 Bergabunglah dengan ribuan tim yang sudah menggunakan Mana-Pro untuk menyelesaikan proyek lebih efisien.
             </p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="#" class="px-10 py-4 bg-white text-blue-800 rounded-xl font-bold text-lg shadow-lg hover:shadow-2xl hover:scale-105 transition-all">
+                <a href="{{ route('register') }}" class="px-10 py-4 bg-white text-blue-800 rounded-xl font-bold text-lg shadow-lg hover:shadow-2xl hover:scale-105 transition-all">
                     <i class="fas fa-rocket mr-2"></i>
                     Mulai Gratis
                 </a>
-                <a href="#" class="px-10 py-4 bg-blue-900 text-white rounded-xl font-bold text-lg border-2 border-white hover:bg-blue-950 transition-all">
+                <a href="{{ route('login') }}" class="px-10 py-4 bg-blue-900 text-white rounded-xl font-bold text-lg border-2 border-white hover:bg-blue-950 transition-all">
                     <i class="fas fa-sign-in-alt mr-2"></i>
                     Masuk ke Akun
                 </a>
@@ -353,7 +353,7 @@
                     <ul class="space-y-2">
                         <li><a href="#tentang" class="hover:text-blue-400 transition">Tentang</a></li>
                         <li><a href="#fitur" class="hover:text-blue-400 transition">Fitur</a></li>
-                        <li><a href="#" class="hover:text-blue-400 transition">Masuk</a></li>
+                        <li><a href="{{ route('login') }}" class="hover:text-blue-400 transition">Masuk</a></li>
                     </ul>
                 </div>
 

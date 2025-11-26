@@ -737,6 +737,11 @@
         @endif
     </div>
 
+    <!-- Comments Section -->
+    <div class="mt-6">
+        <x-comments-section :cardId="$card->card_id" type="card" />
+    </div>
+
     <script>
         function toggleSubtaskForm() {
             const form = document.getElementById('subtask-form');

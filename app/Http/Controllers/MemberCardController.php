@@ -16,10 +16,14 @@ class MemberCardController extends Controller
         $user = Auth::user();
         
         // Get all cards assigned to the current user with subtasks loaded
+        // Exclude cards from completed projects
         $myCards = Card::with(['board.project', 'creator', 'subtasks' => function($query) {
             $query->orderBy('position', 'asc');
         }])
             ->where('assigned_user_id', $user->user_id)
+            ->whereHas('board.project', function($query) {
+                $query->where('status', 'active');
+            })
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -28,6 +32,12 @@ class MemberCardController extends Controller
 
     public function showTask(Project $project, Board $board, Card $card)
     {
+        // Check if project is completed
+        if ($project->status === 'completed') {
+            return redirect()->route('member.my-tasks')
+                ->with('error', 'This project has been completed.');
+        }
+
         // Check if the user is assigned to this card
         if ($card->assigned_user_id !== Auth::id()) {
             return redirect()->route('member.my-tasks')

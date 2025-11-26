@@ -120,7 +120,18 @@
                                 {{ $project->creator->full_name }}
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-500">
-                                @if($project->deadline)
+                                @if($project->status === 'completed')
+                                    <div class="flex flex-col">
+                                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 w-fit">
+                                            <i class="fas fa-check-circle mr-1"></i>Completed
+                                        </span>
+                                        @if($project->completed_at)
+                                            <div class="text-xs text-gray-500 mt-1">
+                                                {{ $project->completed_at->format('M d, Y') }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                @elseif($project->deadline)
                                     <div>{{ date('M d, Y', strtotime($project->deadline)) }}</div>
                                     @php
                                         $daysUntil = (int) floor(now()->diffInDays($project->deadline, false));

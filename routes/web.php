@@ -14,6 +14,9 @@ use App\Http\Controllers\MemberCardController;
 use App\Http\Controllers\MemberSubtaskController;
 use App\Http\Controllers\TimeLogController;
 use App\Http\Controllers\Leader\LeaderSubtaskReviewController;
+use App\Http\Controllers\CommentController;
+use App\Http\Controllers\GroupChatController;
+use App\Http\Controllers\Admin\ReportController;
 
 // Landing Page
 Route::get('/', [LandingController::class, 'index'])->name('landing');
@@ -103,6 +106,16 @@ Route::middleware('auth')->group(function () {
             ->name('admin.time-logs.project');
         Route::get('admin/users/{user}/time-logs', [TimeLogController::class, 'userTimeLogs'])
             ->name('admin.time-logs.user');
+
+        // Reports routes
+        Route::get('admin/reports', [ReportController::class, 'index'])
+            ->name('admin.reports.index');
+        Route::get('admin/reports/subtasks', [ReportController::class, 'subtasksReport'])
+            ->name('admin.reports.subtasks');
+        Route::get('admin/reports/cards', [ReportController::class, 'cardsReport'])
+            ->name('admin.reports.cards');
+        Route::get('admin/reports/projects', [ReportController::class, 'projectsReport'])
+            ->name('admin.reports.projects');
     });
     
     // Leader routes
@@ -122,6 +135,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/projects/{project}/boards/{board}/cards/{card}', [CardController::class, 'destroy'])->name('card.destroy');
         Route::post('/projects/{project}/boards/{board}/cards/{card}/mark-done', [CardController::class, 'markAsDone'])->name('card.mark-done');
         Route::post('/projects/{project}/boards/{board}/cards/{card}/reassign', [CardController::class, 'reassignCard'])->name('card.reassign');
+        Route::post('/projects/{project}/boards/{board}/cards/{card}/cancel-help', [CardController::class, 'cancelHelpRequest'])->name('card.cancel-help');
         
         // Subtask management (Leader can only delete)
         Route::delete('/projects/{project}/boards/{board}/cards/{card}/subtasks/{subtask}', [SubtaskController::class, 'destroyLeader'])->name('subtask.destroy');
@@ -155,5 +169,32 @@ Route::middleware('auth')->group(function () {
         
         // Member request help
         Route::post('/projects/{project}/boards/{board}/cards/{card}/request-help', [CardController::class, 'requestHelp'])->name('member.card.request-help');
+    });
+
+    // Comments Routes (Available for all authenticated users)
+    Route::prefix('comments')->name('comments.')->group(function () {
+        // Card Comments
+        Route::get('/card/{card}', [CommentController::class, 'getCardComments'])->name('card.index');
+        Route::post('/card/{card}', [CommentController::class, 'addCardComment'])->name('card.store');
+        
+        // Subtask Comments
+        Route::get('/subtask/{subtask}', [CommentController::class, 'getSubtaskComments'])->name('subtask.index');
+        Route::post('/subtask/{subtask}', [CommentController::class, 'addSubtaskComment'])->name('subtask.store');
+        
+        // Update and Delete Comments
+        Route::put('/{comment}', [CommentController::class, 'updateComment'])->name('update');
+        Route::delete('/{comment}', [CommentController::class, 'deleteComment'])->name('delete');
+        
+        // Project-wide Comments
+        Route::get('/project/{project}', [CommentController::class, 'getProjectComments'])->name('project.index');
+        Route::get('/project/{project}/stats', [CommentController::class, 'getCommentStats'])->name('project.stats');
+    });
+
+    // Group Chat Routes (Available for all authenticated project members)
+    Route::prefix('group-chat')->name('group-chat.')->group(function () {
+        Route::get('/room/{project}', [GroupChatController::class, 'showRoom'])->name('room');
+        Route::get('/{project}', [GroupChatController::class, 'getMessages'])->name('messages');
+        Route::post('/{project}', [GroupChatController::class, 'sendMessage'])->name('send');
+        Route::delete('/{message}', [GroupChatController::class, 'deleteMessage'])->name('delete');
     });
 });

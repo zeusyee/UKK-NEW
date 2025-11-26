@@ -226,17 +226,49 @@ class TimeLogController extends Controller
             $query->whereDate('start_time', '<=', request('end_date'));
         }
 
-        $timeLogs = $query->orderBy('start_time', 'desc')->paginate(20);
+        // For PDF, get all records instead of paginating
+        if ($request->has('print')) {
+            $timeLogs = $query->orderBy('start_time', 'desc')->get();
+        } else {
+            $timeLogs = $query->orderBy('start_time', 'desc')->paginate(20);
+        }
 
-        $totalHours = $timeLogs->getCollection()->sum(function($log) {
-            return $log->end_time ? $log->end_time->diffInMinutes($log->start_time) / 60 : 0;
-        });
+        $totalHours = $timeLogs instanceof \Illuminate\Pagination\LengthAwarePaginator 
+            ? $timeLogs->getCollection()->sum(function($log) {
+                return $log->end_time ? $log->end_time->diffInMinutes($log->start_time) / 60 : 0;
+            })
+            : $timeLogs->sum(function($log) {
+                return $log->end_time ? $log->end_time->diffInMinutes($log->start_time) / 60 : 0;
+            });
 
-        $totalSessions = $timeLogs->total();
+        $totalSessions = $timeLogs instanceof \Illuminate\Pagination\LengthAwarePaginator 
+            ? $timeLogs->total() 
+            : $timeLogs->count();
         $avgHours = $totalSessions > 0 ? $totalHours / $totalSessions : 0;
-        $activeUsers = $timeLogs->getCollection()->pluck('user_id')->unique()->count();
+        
+        $activeUsers = $timeLogs instanceof \Illuminate\Pagination\LengthAwarePaginator
+            ? $timeLogs->getCollection()->pluck('user_id')->unique()->count()
+            : $timeLogs->pluck('user_id')->unique()->count();
 
-        return view('admin.time-logs.report', compact('timeLogs', 'totalHours', 'totalSessions', 'avgHours', 'activeUsers'));
+        // Generate period title
+        $periodTitle = 'All Time';
+        if ($request->start_date && $request->end_date) {
+            $periodTitle = date('d M Y', strtotime($request->start_date)) . ' - ' . date('d M Y', strtotime($request->end_date));
+        } elseif ($request->start_date) {
+            $periodTitle = 'From ' . date('d M Y', strtotime($request->start_date));
+        } elseif ($request->end_date) {
+            $periodTitle = 'Until ' . date('d M Y', strtotime($request->end_date));
+        }
+
+        // If print request, generate PDF
+        if ($request->has('print')) {
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.time-logs.report-print', compact(
+                'timeLogs', 'totalHours', 'totalSessions', 'avgHours', 'activeUsers', 'periodTitle'
+            ));
+            return $pdf->download('Time-Logs-Report-' . date('Y-m-d') . '.pdf');
+        }
+
+        return view('admin.time-logs.report', compact('timeLogs', 'totalHours', 'totalSessions', 'avgHours', 'activeUsers', 'periodTitle'));
     }
 
     public function teamProductivity(Request $request)

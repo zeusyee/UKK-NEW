@@ -149,4 +149,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Comments Section for Subtask -->
+    <div class="mt-6">
+        <x-comments-section :subtaskId="$subtask->subtask_id" type="subtask" />
+    </div>
 @endsection

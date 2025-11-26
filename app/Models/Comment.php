@@ -10,9 +10,11 @@ class Comment extends Model
     protected $fillable = [
         'card_id',
         'subtask_id',
+        'project_id',
         'user_id',
         'comment_text',
-        'comment_type'
+        'comment_type',
+        'role_filter'
     ];
 
     protected $casts = [
@@ -34,5 +36,10 @@ class Comment extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function project()
+    {
+        return $this->belongsTo(Project::class, 'project_id');
     }
 }

@@ -6,6 +6,7 @@ use App\Models\Subtask;
 use App\Models\Card;
 use App\Models\Board;
 use App\Models\Project;
+use App\Models\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +15,14 @@ class MemberSubtaskController extends Controller
 {
     private function checkMemberAccess($projectId, $card = null)
     {
+        // Get the project
+        $project = \App\Models\Project::find($projectId);
+        
+        // Check if project is completed
+        if ($project && $project->status === 'completed') {
+            abort(403, 'This project has been completed.');
+        }
+
         // Check if member is part of the project
         $member = \App\Models\ProjectMember::where('project_id', $projectId)
             ->where('user_id', Auth::id())
@@ -127,6 +136,17 @@ class MemberSubtaskController extends Controller
                 'actual_hours' => $request->actual_hours ?? $subtask->actual_hours,
                 'completion_notes' => $request->completion_notes
             ]);
+
+            // Create comment from completion_notes
+            if ($request->completion_notes) {
+                Comment::create([
+                    'subtask_id' => $subtask->subtask_id,
+                    'card_id' => $card->card_id,
+                    'user_id' => Auth::id(),
+                    'comment_text' => $request->completion_notes,
+                    'comment_type' => 'card'
+                ]);
+            }
 
             DB::commit();
             

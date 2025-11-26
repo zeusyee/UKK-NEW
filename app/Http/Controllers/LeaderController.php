@@ -139,12 +139,6 @@ class LeaderController extends Controller
 
     public function projectDetails(Project $project)
     {
-        // Check if project is completed
-        if ($project->status === 'completed') {
-            return redirect()->route('leader.dashboard')
-                ->with('error', 'This project has been completed and is now in history. You can no longer access it until you are assigned as a leader to a new active project.');
-        }
-        
         // Check if the authenticated user is a leader/admin of this project
         $member = ProjectMember::where('project_id', $project->project_id)
             ->where('user_id', Auth::id())
@@ -248,12 +242,6 @@ $project->load([
      */
     public function monitoring(Project $project)
     {
-        // Check if project is completed
-        if ($project->status === 'completed') {
-            return redirect()->route('leader.dashboard')
-                ->with('error', 'This project has been completed. Monitoring is only available for active projects.');
-        }
-        
         // Check if the authenticated user is a leader/admin of this project
         $member = ProjectMember::where('project_id', $project->project_id)
             ->where('user_id', Auth::id())
@@ -308,12 +296,6 @@ $project->load([
      */
     public function members(Project $project)
     {
-        // Check if project is completed
-        if ($project->status === 'completed') {
-            return redirect()->route('leader.dashboard')
-                ->with('error', 'This project has been completed. Member list is only available for active projects.');
-        }
-        
         // Check if the authenticated user is a leader/admin of this project
         $member = ProjectMember::where('project_id', $project->project_id)
             ->where('user_id', Auth::id())

@@ -220,6 +220,17 @@
                             <i class="fas fa-circle menu-text ml-auto text-xs text-indigo-300"></i>
                         @endif
                     </a>
+                    
+                    <!-- Reports -->
+                    <a href="{{ route('admin.reports.index') }}" class="menu-item flex items-center py-3.5 px-4 rounded-xl transition-all duration-150 hover:bg-white hover:bg-opacity-10 {{ request()->routeIs('admin.reports.*') ? 'active bg-white bg-opacity-10 no-fancy-shadow' : '' }} group">
+                        <div class="flex items-center justify-center w-10 flex-shrink-0">
+                            <i class="fas fa-file-alt text-xl group-hover:scale-110 transition-transform duration-300"></i>
+                        </div>
+                        <span class="menu-text ml-4 font-medium">Laporan</span>
+                        @if(request()->routeIs('admin.reports.*'))
+                            <i class="fas fa-circle menu-text ml-auto text-xs text-indigo-300"></i>
+                        @endif
+                    </a>
                 </div>
             </nav>
 

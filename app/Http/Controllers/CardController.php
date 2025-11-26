@@ -327,4 +327,22 @@ class CardController extends Controller
         
         return back()->with('success', "Card reassigned from {$oldAssignedUser->full_name} successfully!");
     }
+
+    public function cancelHelpRequest(Project $project, Board $board, Card $card)
+    {
+        $this->checkLeaderAccess($project->project_id);
+        
+        // Check if help is actually requested
+        if (!$card->help_requested) {
+            return back()->with('info', 'No help request to cancel.');
+        }
+        
+        $card->update([
+            'help_requested' => false,
+            'help_requested_at' => null,
+            'help_message' => null
+        ]);
+        
+        return back()->with('success', 'Help request cancelled successfully!');
+    }
 }
